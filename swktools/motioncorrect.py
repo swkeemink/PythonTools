@@ -84,6 +84,9 @@ def correct_array(X, refframes=100, cutoff=True):
     array
         Motion corrected array, will have slightly smaller dimensions because
         of cutoff.
+    array
+        The shifts per frame to match to the average of the
+        middle refframes frames.
     '''
     # get number of frames
     numf = X.shape[0]
@@ -110,7 +113,7 @@ def correct_array(X, refframes=100, cutoff=True):
             miny = out.shape[1]
         out = out[:, maxx:minx, maxy:miny]
 
-    return out
+    return out, shifts
 
 
 def correct_tiffs(folder, folder_mc, refframes=100, cutoff=True):

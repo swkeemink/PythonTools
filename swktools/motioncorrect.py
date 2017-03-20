@@ -32,7 +32,7 @@ def multi_fun(inputs):
     refframes = inputs[2]
     tiff_mc = inputs[3]
     cutoff = inputs[4]
-    out = correct_array(img, refframes, cutoff)
+    out = correct_array(img, refframes, cutoff)[0]
     tifffile.imsave(tiff_mc, out)
     print 'finished tiff ' + str(inputs[0]) + '...'
 

@@ -131,6 +131,9 @@ def correct_tiffs(folder, folder_mc, refframes=100, cutoff=True):
     cutoff : bool
         Whether to cutoff based on maximum displacements (default True)
     '''
+    if folder == folder_mc:
+        raise ValueError('input and output folder should not be the same')
+
     # Find tiffs in folder
     tiffs = sorted(glob.glob(folder+'/*.tif'))
     tiffs_mc = [cycle.replace(folder, folder_mc) for cycle in tiffs]

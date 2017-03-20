@@ -116,7 +116,7 @@ def correct_array(X, refframes=100, cutoff=True):
     return out, shifts
 
 
-def correct_tiffs(folder, folder_mc, refframes=100, cutoff=True):
+def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=True):
     '''For each tiff in folder, motion corrects to the middle refframes frames
     using the register_translation function from scikit-image.
 

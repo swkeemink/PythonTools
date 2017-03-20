@@ -117,9 +117,6 @@ def correct_tiffs(folder, folder_mc, refframes=100, cutoff=True):
     '''For each tiff in folder, motion corrects to the middle refframes frames
     using the register_translation function from scikit-image.
 
-    TODO: After that, do the same across files to correct for cross file motion
-    problems by correcting for each successive average over all frames.
-
     Parameters
     ----------
     folder : string

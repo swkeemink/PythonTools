@@ -36,6 +36,36 @@ def multi_fun(inputs):
     tifffile.imsave(tiff_mc, out)
     print 'finished tiff ' + str(inputs[0]) + '...'
 
+def multi_fun_across(inputs):
+    '''Function to apply motion correction across files in parallel.
+
+    Parameters
+    ----------
+    inputs : list
+        [0], array, lower bounds
+        [1], array, upper bounds
+        [2], array, means
+        [3], array, covariance matrix
+
+    Returns
+    -------
+    array
+        probabilities for each stimulus
+
+    '''
+    img = inputs[1]
+    shift = inputs[2]
+    tiff_mc = inputs[3]
+    out = np.copy(img)
+    numf = out.shape[0]
+    for f in range(numf):
+        curimg = fourier_shift(np.fft.fftn(img[f, :]), shift)
+        out[f, :] = np.fft.ifftn(curimg).real
+
+    tifffile.imsave(tiff_mc, out)
+
+    print 'finished tiff ' + str(inputs[0]) + '...'
+
 
 def correct_array(X, refframes=100, cutoff=True):
     '''Motion correct an array.
@@ -114,4 +144,40 @@ def correct_tiffs(folder, folder_mc, refframes=100, cutoff=True):
                refframes, tiffs_mc[i], cutoff] for i in range(len(tiffs))]
     pool = Pool(None)  # to use less than max processes, change None to number
     pool.map(multi_fun, inputs)
+    pool.close()
+
+def correct_tiffs_across(folder, folder_mc, refframes=100, cutoff=False):
+    '''For each tiff in folder, motion corrects according to the means
+    using the register_translation function from scikit-image.
+
+    Parameters
+    ----------
+    folder : string
+        folder where tiffs are located
+    refframes : int
+        number of frames to average over for reference image (default 100)
+    cutoff : bool
+        Whether to cutoff based on maximum displacements (default True)
+    '''
+
+    # check for folder existence and create if not
+    if not os.path.exists(folder_mc):
+        os.makedirs(folder_mc)
+
+    # Find tiffs in folder
+    tiffs = sorted(glob.glob(folder+'/*.tif'))
+    tiffs_mc = [cycle.replace(folder, folder_mc) for cycle in tiffs]
+
+    # load tiffs and find means
+    imgs = [tifffile.imread(tiff) for tiff in tiffs]
+    means = np.array([img.mean(axis=0) for img in imgs])
+
+    # get corrections
+    out, shifts = correct_array(means, refframes=1, cutoff=True)
+
+    # do shifts
+    inputs = [[i, imgs[i], shifts[i], tiffs_mc[i]] for i in range(len(imgs))]
+
+    pool = Pool(None)  # to use less than max processes, change None to number
+    pool.map(multi_fun_across, inputs)
     pool.close()

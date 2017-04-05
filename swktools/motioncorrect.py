@@ -28,12 +28,16 @@ def multi_fun(inputs):
         probabilities for each stimulus
 
     '''
+    # get inputs
     img = inputs[1]
     refframes = inputs[2]
     tiff_mc = inputs[3]
     cutoff = inputs[4]
+
+    # correct data
     out = correct_array(img, refframes, cutoff)[0]
     tifffile.imsave(tiff_mc, out)
+
     print 'finished tiff ' + str(inputs[0]) + '...'
 
 def multi_fun_across(inputs):
@@ -53,11 +57,14 @@ def multi_fun_across(inputs):
         probabilities for each stimulus
 
     '''
+    # get inputs
     img = inputs[1]
     shift = inputs[2]
     tiff_mc = inputs[3]
     out = np.copy(img)
     numf = out.shape[0]
+
+    # correct data
     for f in range(numf):
         curimg = fourier_shift(np.fft.fftn(img[f, :]), shift)
         out[f, :] = np.fft.ifftn(curimg).real
@@ -116,7 +123,7 @@ def correct_array(X, refframes=100, cutoff=True):
     return out, shifts
 
 
-def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=True):
+def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
     '''For each tiff in folder, motion corrects to the middle refframes frames
     using the register_translation function from scikit-image.
 
@@ -143,8 +150,10 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=True):
         os.makedirs(folder_mc)
 
     # motion correct and save each
+    print 'loading in tiffs...'
     inputs = [[i, tifffile.imread(tiffs[i]),
                refframes, tiffs_mc[i], cutoff] for i in range(len(tiffs))]
+    print 'starting correction...'
     pool = Pool(None)  # to use less than max processes, change None to number
     pool.map(multi_fun, inputs)
     pool.close()
@@ -176,7 +185,7 @@ def correct_tiffs_across(folder, folder_mc, refframes=100, cutoff=False):
     means = np.array([img.mean(axis=0) for img in imgs])
 
     # get corrections
-    out, shifts = correct_array(means, refframes=1, cutoff=True)
+    out, shifts = correct_array(means, refframes=1, cutoff=False)
 
     # do shifts
     inputs = [[i, imgs[i], shifts[i], tiffs_mc[i]] for i in range(len(imgs))]

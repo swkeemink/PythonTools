@@ -2,6 +2,7 @@
 
 Author: s w keemink
 """
+from __future__ import division
 import numpy as np
 from skimage.feature import register_translation as rt
 from scipy.ndimage.fourier import fourier_shift

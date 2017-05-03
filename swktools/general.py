@@ -69,7 +69,8 @@ def spike_match(real, est, maxdelay ):
     false_p = len(est) - true_p
 
     # get ER
-    ER = 1 - true_p/(true_p+false_p+false_n)
+    F1 = 2*true_p/(2*true_p + false_n + false_p)
+    ER = 1 - F1
 
     return ER, true_p, false_p, false_n, real_labels, est_labels
 

@@ -1,3 +1,4 @@
+"""Set of plotting aids for Holoviews."""
 import holoviews as hv
 import numpy as np
 

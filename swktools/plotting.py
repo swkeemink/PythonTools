@@ -3,7 +3,48 @@ import holoviews as hv
 import numpy as np
 
 
-def hist(x, bins=10):
+def plotspikes(spiketimes, yoffset, dt, text_offset=None):
+    """Plot the spikes in spiketimes.
+
+    Also indicates if there are more than one spike within distance dt.
+
+    Parameters
+    ----------
+    spiketimes : array
+        Array of spiketimes
+    yoffset : array
+        The y-offset for plotting spikes
+    dt : float
+        Distance dt at which spikes should be indicated as a group
+    text_offset : array, optional
+        If given (as [dx,dy]), this gives the offset of the text indicating
+        the number of spikes, relative to the first spike in a series.
+        If None, will set it to [-dt/2, 0]
+    Returns
+    -------
+    holoviews Scatter object
+        Shows the spikes. Can be interfaced with as any normal Scatter object.
+    """
+    # get groups of spikes
+    small_diffs = np.diff(spiketimes) <= dt
+    start_ends = np.diff(np.concatenate([[0], small_diffs, [0]]))
+    starts = np.where(start_ends == 1)[0]
+    ends = np.where(start_ends == -1)[0]
+    numbers = ends-starts + 1  # number of spikes per start
+    # plot spikes
+    fig = hv.Scatter(zip(spiketimes, np.ones(len(spiketimes))*yoffset))
+
+    # plot spike numbers
+    if text_offset is None:
+        dx, dy = [-dt/2, 0]
+    else:
+        dx, dy = text_offset
+    for i, start in enumerate(starts):
+        fig *= hv.Text(spiketimes[start]+dx, yoffset+dy, str(numbers[i]))
+    return fig
+
+
+def hist(x, bins=10, group='hist'):
     """"Makes a Holoviews histogram for the data provided.
 
     Parameters
@@ -19,7 +60,7 @@ def hist(x, bins=10):
         Holoviews histogram object
     """
     counts, edges = np.histogram(x, bins)
-    return hv.Histogram(counts, edges)
+    return hv.Histogram(counts, edges, group=group)
 
 def ScaleBars(x=0,y=0,scalex=1,scaley=1,labeldx = 0.035,labeldy=2,labelx='x',labely='y',w=1,color='k'):
     ''' Makes scalebars using HoloViews' Curve object, and puts them at

@@ -8,8 +8,8 @@ from skimage.feature import register_translation as rt
 from scipy.ndimage.fourier import fourier_shift
 
 
-def spike_match(real, est, maxdelay ):
-    """Matches real spiketimes with estimated spiketimes.
+def spike_match(real, est, maxdelay):
+    """Match real spiketimes with estimated spiketimes.
 
     Parameters
     ----------
@@ -34,7 +34,7 @@ def spike_match(real, est, maxdelay ):
       Labels on real times (true_p: 1, false_n: 2)
     array
       Labels on estimated times (true_p: 1, false_p: 3)
-      """
+    """
     # start counters
     true_p = 0
     false_n = 0

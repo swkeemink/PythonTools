@@ -134,18 +134,20 @@ def whisk_compare(Points, labels=None, ref=0, vdims=['score'], group='Bars',
         xref = ref+1
         xcom = 1+i
         y = maxpoint+.1*(ndists-count-3)
-        sig_plot *= hv.Curve(zip([xref, xcom], [y, y]), extents=(0,-maxpoint/3,5,maxpoint+0.2), group='significance')(style={'color':'k'})
-        sig_plot *= hv.Curve(zip([xref, xref], [y, y-.02]), group='significance')(style={'color':'k'})
-        sig_plot *= hv.Curve(zip([xcom, xcom], [y, y-.02]), group='significance')(style={'color':'k'})
+        sig_plot *= hv.Curve(zip([xref, xcom], [y, y]),
+                             extents=(0, -maxpoint/3, 5, maxpoint+0.2),
+                             group='significance')(style={'color': 'k'})
+        sig_plot *= hv.Curve(zip([xref, xref], [y, y-.02]),
+                             group='significance')(style={'color': 'k'})
+        sig_plot *= hv.Curve(zip([xcom, xcom], [y, y-.02]),
+                             group='significance')(style={'color': 'k'})
         xloc = (ref+2+i)/2
         yloc = maxpoint+offset+.1*(ndists-count-3)
         text = hv.Text(xloc, yloc, sig_text, fontsize=fontsize)
         sig_plot *= text
-        count+=1
+        count += 1
 
     return whisk*sig_plot
-
-
 
 
 def bar_compare(Points, labels=None, ref=0, vdims=['score'], group='Bars',
@@ -220,9 +222,21 @@ def bar_compare(Points, labels=None, ref=0, vdims=['score'], group='Bars',
 
         # plot significance
         maxpoint = max([max(points1), max(points2)])
-        sig_plot *= hv.Curve(zip([ref+0.5, .5+i],[maxpoint+0.15*(ref+0.5-i), maxpoint+0.15*(ref+0.5-i)]), extents=(0,0,2,1), group='significance')(style={'color':'k'})
-        sig_plot *= hv.Curve(zip([ref+0.5, ref+0.5],[maxpoint+0.15*(ref+0.5-i), maxpoint+0.15*(ref+0.5-i)-.05]), extents=(0,0,2,1), group='significance')(style={'color':'k'})
-        sig_plot *= hv.Curve(zip([.5+i, .5+i],[maxpoint+0.15*(ref+0.5-i), maxpoint+0.15*(ref+0.5-i)-.05]), extents=(0,0,2,1), group='significance')(style={'color':'k'})
+        sig_plot *= hv.Curve(zip([ref+0.5, .5+i],
+                                 [maxpoint+0.15*(ref+0.5-i),
+                                  maxpoint+0.15*(ref+0.5-i)]),
+                             extents=(0, 0, 2, 1),
+                             group='significance')(style={'color': 'k'})
+        sig_plot *= hv.Curve(zip([ref+0.5, ref+0.5],
+                                 [maxpoint+0.15*(ref+0.5-i),
+                                  maxpoint+0.15*(ref+0.5-i)-.05]),
+                             extents=(0, 0, 2, 1),
+                             group='significance')(style={'color': 'k'})
+        sig_plot *= hv.Curve(zip([.5+i, .5+i],
+                                 [maxpoint+0.15*(ref+0.5-i),
+                                  maxpoint+0.15*(ref+0.5-i)-.05]),
+                             extents=(0, 0, 2, 1),
+                             group='significance')(style={'color': 'k'})
         xloc = (ref+1.5+i)/2
         yloc = maxpoint+offset+.15*(ref-0.5-i)
         text = hv.Text(xloc, yloc, sig_text, fontsize=fontsize)
@@ -274,7 +288,7 @@ def plotspikes(spiketimes, yoffset, dt, text_offset=None):
 
 
 def hist(x, bins=10, group='hist'):
-    """"Makes a Holoviews histogram for the data provided.
+    """Make a Holoviews histogram for the data provided.
 
     Parameters
     ----------
@@ -287,13 +301,15 @@ def hist(x, bins=10, group='hist'):
     -------
     Holoviews.histogram
         Holoviews histogram object
+
     """
     counts, edges = np.histogram(x, bins)
     return hv.Histogram(counts, edges, group=group)
 
-def ScaleBars(x=0,y=0,scalex=1,scaley=1,labeldx = 0.035,labeldy=2,labelx='x',labely='y',w=1,color='k'):
-    ''' Makes scalebars using HoloViews' Curve object, and puts them at
-    (x,y).
+
+def ScaleBars(x=0, y=0, scalex=1, scaley=1, labeldx=0.035,
+              labeldy=2, labelx='x', labely='y', w=1, color='k'):
+    """Make scalebars using HoloViews' Curve object, and puts them at (x,y).
 
     Parameters
     ----------
@@ -322,18 +338,21 @@ def ScaleBars(x=0,y=0,scalex=1,scaley=1,labeldx = 0.035,labeldy=2,labelx='x',lab
     A holoviews Curve object with both the horizontal and vertical
     scalebars
 
-    '''
+    """
     # define horizontal scalebar
-    bar_x = hv.Curve(zip([x,x+scalex],[y,y]))(style={'color':color,'linewidth':w})
+    bar_x = hv.Curve(zip([x, x+scalex], [y, y]))(style={'color': color,
+                                                        'linewidth': w})
 
     # define horizontal label
-    label_x = hv.Text(x+scalex/2,y-labeldx,labelx)(style={'color':color})
+    label_x = hv.Text(x+scalex/2, y-labeldx, labelx)(style={'color': color})
 
     # define vertical scalebar
-    bar_y = hv.Curve(zip([x,x],[y,y+scaley]))(style={'color':color,'linewidth':w})
+    bar_y = hv.Curve(zip([x, x], [y, y+scaley]))(style={'color': color,
+                                                        'linewidth': w})
 
     # define vertical label
-    label_y = hv.Text(x-labeldy,y+scaley/2,labely,rotation=90)(style={'color':color})
+    label_y = hv.Text(x-labeldy, y+scaley/2, labely,
+                      rotation=90)(style={'color': color})
 
     # return overlay
     return bar_x*label_x*bar_y*label_y

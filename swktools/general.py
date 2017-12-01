@@ -6,6 +6,7 @@ from __future__ import division
 import numpy as np
 from skimage.feature import register_translation as rt
 from scipy.ndimage.fourier import fourier_shift
+from scipy import signal
 
 
 def spike_match(real, est, maxdelay):
@@ -75,7 +76,6 @@ def spike_match(real, est, maxdelay):
     return ER, true_p, false_p, false_n, real_labels, est_labels
 
 
-
 def find_max_correlation_shifted(x, y):
     """Finding the maximum correlation between two arrays after shifting.
 
@@ -134,3 +134,122 @@ def popvec(X, ang):
 
     # return the angle of the population vector
     return 0.5*np.arctan2(vest0[1], vest0[0])
+
+
+
+def lowPassFilter(F, fs=40, nfilt=40, fw_base=10, axis=0):
+    '''
+    Low pass filters a fluorescence imaging trace line.
+
+    Parameters
+    ----------
+    F : array_like
+        Fluorescence signal.
+    fs : float, optional
+        Sampling frequency of F, in Hz. Default 40.
+    nfilt : int, optional
+        Number of taps to use in FIR filter, default 40
+    fw_base : float, optional
+        Cut-off frequency for lowpass filter, default 1
+    axis : int, optional
+        Along which axis to apply low pass filtering, default 0
+
+    Returns
+    -------
+    array
+        Low pass filtered signal of len(F)
+
+    Based on implementation by S. Lowe.
+    '''
+    # The Nyquist rate of the signal is half the sampling frequency
+    nyq_rate = fs / 2.0
+
+    # Make a set of weights to use with our taps.
+    # We use an FIR filter with a Hamming window.
+    b = signal.firwin(nfilt, cutoff=fw_base/nyq_rate, window='hamming')
+
+    # Use lfilter to filter with the FIR filter.
+    # We filter along the second dimension because that represents time
+    filtered_f = signal.filtfilt(b, [1.0], F, axis=axis)
+
+    return filtered_f
+
+def highPassFilter(F, fs=40, nfilt=40, fw_base=10, axis=0):
+    '''
+    High pass filters a fluorescence imaging trace line.
+
+    Parameters
+    ----------
+    F : array_like
+        Fluorescence signal.
+    fs : float, optional
+        Sampling frequency of F, in Hz. Default 40.
+    nfilt : int, optional
+        Number of taps to use in FIR filter, default 40
+    fw_base : float, optional
+        Cut-off frequency for lowpass filter, default 1
+    axis : int, optional
+        Along which axis to apply low pass filtering, default 0
+
+    Returns
+    -------
+    array
+        Low pass filtered signal of len(F)
+
+    Based on implementation by S. Lowe.
+    '''
+    # The Nyquist rate of the signal is half the sampling frequency
+    nyq_rate = fs / 2.0
+
+    # Make a set of weights to use with our taps.
+    # We use an FIR filter with a Hamming window.
+    b = signal.firwin(nfilt, cutoff=fw_base/nyq_rate,
+                      pass_zero=False)
+
+    # Use lfilter to filter with the FIR filter.
+    # We filter along the second dimension because that represents time
+    filtered_f = signal.filtfilt(b, [1.0], F, axis=axis)
+
+    return filtered_f
+
+
+def bandPassFilter(F, fs=40, nfilt=40, fw_low=10, fw_up=40, axis=0):
+    '''
+    Band pass filters a fluorescence imaging trace line.
+
+    Parameters
+    ----------
+    F : array_like
+        Fluorescence signal.
+    fs : float, optional
+        Sampling frequency of F, in Hz. Default 40.
+    nfilt : int, optional
+        Number of taps to use in FIR filter, default 40
+    fw_low : float, optional
+        Lower cut-off frequency for bandpass filter, default 10
+    fw_up : float, optional
+        Upper cut-off frequency for bandpass filter, default 10
+    axis : int, optional
+        Along which axis to apply low pass filtering, default 0
+
+    Returns
+    -------
+    array
+        Low pass filtered signal of len(F)
+
+    Based on implementation by S. Lowe.
+    '''
+    # The Nyquist rate of the signal is half the sampling frequency
+    nyq_rate = fs / 2.0
+
+    # Make a set of weights to use with our taps.
+    # We use an FIR filter with a Hamming window.
+    b = signal.firwin(nfilt, [fw_low/nyq_rate, fw_up/nyq_rate],
+                      pass_zero=False)
+    # taps = firwin(ntaps, [lowcut, highcut], nyq=nyq, pass_zero=False,
+    #               window=window, scale=False)
+    # Use lfilter to filter with the FIR filter.
+    # We filter along the second dimension because that represents time
+    filtered_f = signal.filtfilt(b, [1.0], F, axis=axis)
+
+    return filtered_f

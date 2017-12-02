@@ -4,7 +4,7 @@ Based on Sugihara et al (2012) - Detecting Causality in Complex Ecosystems.
 
 Author: Sander Keemink.
 """
-
+import random
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
@@ -74,7 +74,7 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
     # get some information about data size
     ndelay = delayed_manifolds.shape[2]
     ndims = delayed_manifolds.shape[0]
-    # N = delayed_manifolds.shape[1]
+    N = delayed_manifolds.shape[1]
 
     # start analysis
     data = delayed_manifolds
@@ -82,11 +82,13 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
     cors = np.zeros((ndims, ndims, len(rnge)))
     # loop over time lengths
     for i, l in enumerate(rnge):
+	indices = random.sample(range(N), l)
+        data_cut = data[:, indices, :]
         dists, ids, weights, preds = {}, {}, {}, {}
         # loop over actual dimensions
         for dim in range(ndims):
             # get nearest neighbours
-            dists[dim], ids[dim] = findknearest(data[dim, :l, :], k)
+            dists[dim], ids[dim] = findknearest(data_cut[dim, :, :], k)
 
             # get weights as per pop paper
             minim = dists[dim].min(axis=1)
@@ -95,12 +97,10 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
         # get predictions from cross embeddings for all dimension combinations
         for dim1 in range(ndims):  # dimension to use to predict
             for dim2 in range(ndims):  # dimension to predict
-                points_to_use = delayed_manifolds[dim2, ids[dim1], 1]
+                points_to_use = data_cut[dim2, ids[dim1], 1]
                 preds[dim1, dim2] = np.sum(weights[dim1][:, :]*points_to_use,
                                            axis=1)
                 cors[dim1, dim2, i] = np.corrcoef(preds[dim1, dim2],
-                                                  delayed_manifolds[dim2,
-                                                                    :l,
-                                                                    1])[0, 1]
+                                                  data_cut[dim2, :, 1])[0, 1]
 
     return cors

@@ -48,14 +48,22 @@ def findknearest(data, k):
     k : int
         How many neighbours to find.
 
+    Returns
+    -------
+    array
+        distances to k nearest points
+    array
+        ids of k nearest points
     """
     neigh = NearestNeighbors(n_neighbors=k+1)
     neigh.fit(data)
     dists, ids = neigh.kneighbors(data, n_neighbors=k+1)
+
     return dists[:, 1:], ids[:, 1:]
 
 
-def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
+def do_embedding(delayed_manifolds, rnge=None,
+                 randomize_coordinates=False):
     """Do embedding at different time-point-lengths.
 
     Parameters
@@ -63,7 +71,9 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
     delayed_manifolds : array
         ndim*ndata*ndelay array with delayed single time courses
     rnge : array, optional
-        at which time points to calculate the predictability of the variables
+        At which time points to calculate the predictability of the variables
+    randomize_coordinates : bool, optional
+        If true, will randomize the delay coordinates as in Tajima et al (2015)
 
     Returns
     -------
@@ -71,6 +81,20 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
         The correlations
 
     """
+    if rnge is None:
+        rnge = range(20, 5000, 20)
+
+    # randomize delay coordinates if requested
+    if randomize_coordinates:
+        delayed_randomized = np.copy(delayed_manifolds)
+        for i in range(delayed_manifolds.shape[0]):
+            R = np.random.normal(0, 1, (delayed_manifolds.shape[2],
+                                        delayed_manifolds.shape[2]))
+            for j in range(delayed_manifolds.shape[1]):
+                delayed_randomized[i, j, :] = np.dot(
+                                                 R, delayed_manifolds[i, j, :])
+        delayed_manifolds = delayed_randomized
+
     # get some information about data size
     ndelay = delayed_manifolds.shape[2]
     ndims = delayed_manifolds.shape[0]
@@ -82,7 +106,7 @@ def do_embedding(delayed_manifolds, rnge=range(20, 5000, 20)):
     cors = np.zeros((ndims, ndims, len(rnge)))
     # loop over time lengths
     for i, l in enumerate(rnge):
-	indices = random.sample(range(N), l)
+        indices = random.sample(range(N), l)
         data_cut = data[:, indices, :]
         dists, ids, weights, preds = {}, {}, {}, {}
         # loop over actual dimensions

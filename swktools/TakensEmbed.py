@@ -121,10 +121,10 @@ def do_embedding(delayed_manifolds, rnge=None,
         # get predictions from cross embeddings for all dimension combinations
         for dim1 in range(ndims):  # dimension to use to predict
             for dim2 in range(ndims):  # dimension to predict
-                points_to_use = data_cut[dim2, ids[dim1], 1]
+                points_to_use = data_cut[dim2, ids[dim1], 0]
                 preds[dim1, dim2] = np.sum(weights[dim1][:, :]*points_to_use,
                                            axis=1)
                 cors[dim1, dim2, i] = np.corrcoef(preds[dim1, dim2],
-                                                  data_cut[dim2, :, 1])[0, 1]
+                                                  data_cut[dim2, :, 0])[0, 1]
 
     return cors

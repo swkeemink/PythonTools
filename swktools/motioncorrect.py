@@ -136,7 +136,7 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
     refframes : int
         number of frames to average over for reference image (default 100)
     cutoff : bool
-        Whether to cutoff based on maximum displacements (default True)
+        Whether to cutoff based on maximum displacements (default False)
     '''
     if folder == folder_mc:
         raise ValueError('input and output folder should not be the same')

@@ -38,7 +38,7 @@ def multi_fun(inputs):
     out = correct_array(img, refframes, cutoff)[0]
     tifffile.imsave(tiff_mc, out)
 
-    print 'finished tiff ' + str(inputs[0]) + '...'
+    print('finished tiff ' + str(inputs[0]) + '...')
 
 def multi_fun_across(inputs):
     '''Function to apply motion correction across files in parallel.
@@ -71,7 +71,7 @@ def multi_fun_across(inputs):
 
     tifffile.imsave(tiff_mc, out)
 
-    print 'finished tiff ' + str(inputs[0]) + '...'
+    print('finished tiff ' + str(inputs[0]) + '...')
 
 
 def correct_array(X, refframes=100, cutoff=True):
@@ -150,10 +150,10 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
         os.makedirs(folder_mc)
 
     # motion correct and save each
-    print 'loading in tiffs...'
+    print('loading in tiffs...')
     inputs = [[i, tifffile.imread(tiffs[i]),
                refframes, tiffs_mc[i], cutoff] for i in range(len(tiffs))]
-    print 'starting correction...'
+    print('starting correction...')
     pool = Pool(None)  # to use less than max processes, change None to number
     pool.map(multi_fun, inputs)
     pool.close()

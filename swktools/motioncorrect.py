@@ -163,7 +163,7 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
     pool.close()
 
 
-def correct_tiffs_across(folder, folder_mc, cutoff=False):
+def correct_tiffs_across(folder, folder_mc, cutoff=False, n_processes=None):
     """For each tiff in folder, motion corrects according to the means.
 
     Uses the register_translation function from scikit-image.
@@ -176,7 +176,8 @@ def correct_tiffs_across(folder, folder_mc, cutoff=False):
         folder where motion corrected tiffs will be placed
     cutoff : bool
         Whether to cutoff based on maximum displacements (default False)
-
+    n_processes : int or None
+        Number of processes to use
     """
     # check for folder existence and create if not
     if not os.path.exists(folder_mc):
@@ -196,6 +197,6 @@ def correct_tiffs_across(folder, folder_mc, cutoff=False):
     # do shifts
     inputs = [[i, imgs[i], shifts[i], tiffs_mc[i]] for i in range(len(imgs))]
 
-    pool = Pool(None)  # to use less than max processes, change None to number
+    pool = Pool(n_processes)  # to use less than max processes, change None to number
     pool.map(multi_fun_across, inputs)
     pool.close()

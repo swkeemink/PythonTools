@@ -12,7 +12,7 @@ from multiprocessing import Pool
 
 
 def multi_fun(inputs):
-    '''Function to apply motion correction across files in parallel.
+    """Apply motion correction across files in parallel.
 
     Parameters
     ----------
@@ -27,7 +27,7 @@ def multi_fun(inputs):
     array
         probabilities for each stimulus
 
-    '''
+    """
     # get inputs
     img = inputs[1]
     refframes = inputs[2]
@@ -38,10 +38,11 @@ def multi_fun(inputs):
     out = correct_array(img, refframes, cutoff)[0]
     tifffile.imsave(tiff_mc, out)
 
-    print 'finished tiff ' + str(inputs[0]) + '...'
+    print('finished tiff ' + str(inputs[0]) + '...')
+
 
 def multi_fun_across(inputs):
-    '''Function to apply motion correction across files in parallel.
+    """Apply motion correction across files in parallel.
 
     Parameters
     ----------
@@ -56,7 +57,7 @@ def multi_fun_across(inputs):
     array
         probabilities for each stimulus
 
-    '''
+    """
     # get inputs
     img = inputs[1]
     shift = inputs[2]
@@ -71,11 +72,11 @@ def multi_fun_across(inputs):
 
     tifffile.imsave(tiff_mc, out)
 
-    print 'finished tiff ' + str(inputs[0]) + '...'
+    print('finished tiff ' + str(inputs[0]) + '...')
 
 
 def correct_array(X, refframes=100, cutoff=True):
-    '''Motion correct an array.
+    """Motion correct an array.
 
     Parameters
     ----------
@@ -94,7 +95,8 @@ def correct_array(X, refframes=100, cutoff=True):
     array
         The shifts per frame to match to the average of the
         middle refframes frames.
-    '''
+
+    """
     # get number of frames
     numf = X.shape[0]
 
@@ -124,8 +126,9 @@ def correct_array(X, refframes=100, cutoff=True):
 
 
 def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
-    '''For each tiff in folder, motion corrects to the middle refframes frames
-    using the register_translation function from scikit-image.
+    """For each tiff in folder, motion corrects to the middle refframes frames.
+
+    Uses the register_translation function from scikit-image.
 
     Parameters
     ----------
@@ -137,7 +140,8 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
         number of frames to average over for reference image (default 100)
     cutoff : bool
         Whether to cutoff based on maximum displacements (default False)
-    '''
+
+    """
     if folder == folder_mc:
         raise ValueError('input and output folder should not be the same')
 
@@ -150,28 +154,31 @@ def correct_tiffs_sep(folder, folder_mc, refframes=100, cutoff=False):
         os.makedirs(folder_mc)
 
     # motion correct and save each
-    print 'loading in tiffs...'
+    print('loading in tiffs...')
     inputs = [[i, tifffile.imread(tiffs[i]),
                refframes, tiffs_mc[i], cutoff] for i in range(len(tiffs))]
-    print 'starting correction...'
+    print('starting correction...')
     pool = Pool(None)  # to use less than max processes, change None to number
     pool.map(multi_fun, inputs)
     pool.close()
 
-def correct_tiffs_across(folder, folder_mc, refframes=100, cutoff=False):
-    '''For each tiff in folder, motion corrects according to the means
-    using the register_translation function from scikit-image.
+
+def correct_tiffs_across(folder, folder_mc, cutoff=False, n_processes=None):
+    """For each tiff in folder, motion corrects according to the means.
+
+    Uses the register_translation function from scikit-image.
 
     Parameters
     ----------
     folder : string
         folder where tiffs are located
-    refframes : int
-        number of frames to average over for reference image (default 100)
+    folder_mc : string
+        folder where motion corrected tiffs will be placed
     cutoff : bool
-        Whether to cutoff based on maximum displacements (default True)
-    '''
-
+        Whether to cutoff based on maximum displacements (default False)
+    n_processes : int or None
+        Number of processes to use
+    """
     # check for folder existence and create if not
     if not os.path.exists(folder_mc):
         os.makedirs(folder_mc)
@@ -190,6 +197,6 @@ def correct_tiffs_across(folder, folder_mc, refframes=100, cutoff=False):
     # do shifts
     inputs = [[i, imgs[i], shifts[i], tiffs_mc[i]] for i in range(len(imgs))]
 
-    pool = Pool(None)  # to use less than max processes, change None to number
+    pool = Pool(n_processes)  # to use less than max processes, change None to number
     pool.map(multi_fun_across, inputs)
     pool.close()

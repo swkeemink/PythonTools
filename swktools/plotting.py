@@ -603,3 +603,41 @@ def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
                  for f in framenums}
     # return animation
     return hv.HoloMap(frames)*hv.Scatter(zip([0], [0]), group='origin')
+
+def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
+    """For spike coding networks (SCNs), animates signal tracking.
+
+    Parameters
+    ----------
+    x : array
+        2D array of the actual stimulus
+    x_ : array
+        2D array of the estimated stimulus
+    o : array
+        N by nT array of 0s and 1s indicating spikes
+    times : array
+        array of times
+    Tstart : int
+        Starting timestep
+    Tend : int
+        Final timestep (if None, will use final timestep)
+    step_size : int
+        How many timesteps to skip for each frame
+
+    Output
+    ------
+    Holoviews HoloMap
+    """
+    # get some parameters
+    if Tend is None: Tend = x.shape[1]
+    framenums = range(Tstart, Tstart+Tend,step_size)
+
+    # Define the animation frames
+    frames = {f: hv.Curve(zip(times[0:f:step_size], x[0,0:f:step_size])) for f in framenums}
+    frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[0,0:f:step_size])) for f in framenums}
+    for s in range(1, x.shape[0]):
+        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x[s,0:f:step_size])) for f in framenums}
+        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[s,0:f:step_size])) for f in framenums}
+
+    # return animation
+    return hv.HoloMap(frames)

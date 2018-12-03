@@ -720,6 +720,7 @@ def animate_signal_tracking(x, x_, times, Tstart=0, Tend=None, step_size=10):
     framenums = range(Tstart, Tstart+Tend,step_size)
 
     # Define the animation frames
+    step_size=1
     frames = {f: hv.Curve(
                             zip(times[0:f:step_size], x[0, 0:f:step_size])
                           ) for f in framenums}

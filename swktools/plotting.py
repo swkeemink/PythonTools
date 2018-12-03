@@ -605,6 +605,7 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
     projectVs = hv.Overlay()
     bounds = hv.Overlay()
     for i in range(N):
+
         v = np.copy(D2[:, i])
         norm = np.linalg.norm(v)
         v/= norm

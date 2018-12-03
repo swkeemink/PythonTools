@@ -621,7 +621,7 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
                                group=group)(style=style)
     return bounds, projectVs
 
-def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
+def animate_error_box(D, beta, E, x, o, Tstart=0, Tend=None,
                       boundlength=0.05, trail_length=40, step_size=10,
                       spike_tau=1., dt=0.01):
     """For spike coding networks (SCNs), animates the error inside bounding box.
@@ -632,8 +632,6 @@ def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
     ----------
     D : array
         2D array which is the SCN decoding matrix
-    T : array
-        1D array with SCN spiking thresholds
     beta : float
         SCN cost parameter
     E : array
@@ -662,6 +660,9 @@ def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
     # get some parameters
     if Tend is None: Tend = E.shape[1]
     framenums = range(Tstart, Tstart+Tend,step_size)
+    N = D.shape[1]
+    Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    T = np.diag(Omeg)/2
 
     # turn spikes into line ticknesses
     s = np.zeros(o.shape)

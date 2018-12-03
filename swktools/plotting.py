@@ -356,3 +356,91 @@ def ScaleBars(x=0, y=0, scalex=1, scaley=1, labeldx=0.035,
 
     # return overlay
     return bar_x*label_x*bar_y*label_y
+
+def show_connectivity(W):
+    """ Illustrate the connectivity matrix W, with a simple graph.
+
+    On the left will be all source neurons, on the right all target neurons.
+
+    Parameters
+    ----------
+    W : array
+        The weight matrix (should be a square matrix)
+
+    Output
+    ------
+    Holoviews overlay
+        The plotting object
+    """
+    # plot neurons on left and right
+    N, M = W.shape
+    mx = np.max([N, M])
+    shiftmx = (mx-1)/2.
+    shiftN = (N-1)/2.
+    shiftM = (M-1)/2.
+    extents = (-.1, -.1*mx-shiftmx, 1.1, mx-1+.1*mx-shiftmx)
+    style = {'color':'k', 'size':100/mx}
+    out = hv.Scatter(zip(np.zeros(N), np.arange(N)-shiftN),
+                     extents=extents)(style=style)
+    out *= hv.Scatter(zip(np.ones(M), np.arange(M)-shiftM),
+                     extents=extents)(style=style)
+
+    # add forward connections
+    for i in range(N):
+        for j in range(M):
+            w = W[i, j]
+            style = {'color':'k', 'alpha':abs(w)/abs(W).max()}
+            if w < 0:
+                style['color'] = 'b'
+            if w > 0:
+                style['color'] = 'r'
+            out *= hv.Curve(zip([0, 1], [i-shiftN, j-shiftM]))(style=style)
+    return out
+
+def rectangle(x=0, y=0, width=1, height=1):
+    """Gives an array with a rectangle shape, for the plot_frs_block func."""
+    return np.array([(x,y), (x+width, y), (x+width, y+height), (x, y+height)])
+
+def plot_frs_blocks(frs,norm, unit = ''):
+    """ Plots the firing rates in frs as blocks, and adds a star where the minima are
+
+    Parameters
+    ----------
+    frs : array
+        2D array with firing rate sizes
+    norm : float
+        normalization constant (frs will be scaled as 0.4*frs/norm)
+    unit : string
+        what unit to use on axes. Need to do own formatting, for example ' (deg)' will make the
+        x-label 'Center orientation (deg)'
+
+    Returns
+    -------
+    Holoviews Overlay
+        The elements plotted
+    """
+    # init output
+    out = hv.Overlay()
+
+    # normalize frs
+    baseheight=.4
+    frs = baseheight*frs/norm
+
+    # draw boxes
+    Nx, Ny = frs.shape
+    for i in range(Ny):
+        for j in range(Nx):
+            rect = rectangle(j-0.4,i*0.5-frs[j,i]/2,0.8,frs[j,i])
+            out *= hv.Polygons([rect],extents=(-0.6,-0.25,3.5,1.1),kdims=['Surround orientation'+unit,'Center orientation'+unit])
+
+    # add stars
+    argmins = np.argmin(frs,axis=0)
+    out*= hv.Scatter(zip(argmins,[0,0.5,1]),label='Strongest suppression')
+
+    # add scalebar
+    fr = int(norm/2)
+    height = baseheight*fr/norm
+    out*= hv.Curve(zip([0,0],[0,height]))
+    out*= hv.Text(0, height, str(fr)+'Hz')
+
+    return out

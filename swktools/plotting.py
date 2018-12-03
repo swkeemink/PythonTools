@@ -729,4 +729,3 @@ def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
 
     # return animation
     return hv.HoloMap(frames)
->>>>>>> 4836cc2c0c27d3263c64bc51101a0054c0d0911a

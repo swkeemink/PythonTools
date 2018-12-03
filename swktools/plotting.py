@@ -444,3 +444,289 @@ def plot_frs_blocks(frs,norm, unit = ''):
     out*= hv.Text(0, height, str(fr)+'Hz')
 
     return out
+
+def plot_bounds_z(D, offset=(0,0,0), length=1, group='Curve'):
+    ''' Plots the bounding box, for a given offset in z direction.
+
+    For the offset in z it will be calculated what the net size of the bounding box is
+
+    Parameters
+    ----------
+    D : array
+        Decoding weights, 3D
+    offset : list/tuple/array
+        [x,y,z] offset of the bounding box
+    length : float
+        length of the bounding box vertices
+
+    Returns
+    -------
+    HoloViews overlay
+        The boundary box, offset by 'offset'
+    HoloViews overlay
+        The vectors determining the boundary box, offset by ''offset'
+    '''
+    # get offsets
+    x, y, z = offset
+
+    # get thresholds for 2D box at height 0
+    D2 = D[:2, :]
+    Omeg = np.dot(D2.T, D2) + np.identity(N)*beta
+    T = np.diag(Omeg)
+#     T = np.sqrt(2)*T
+
+    # plot projection vectors and bounding box
+    angle = np.pi/2
+    rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+    projectVs = hv.Overlay()
+    bounds = hv.Overlay()
+    for i in range(N):
+        v = np.copy(D2[:, i])
+        norm = np.linalg.norm(v)
+        v/= norm
+        scale = T[i]/norm**1-z
+        if scale<0: scale=0
+        prop = scale*norm**1/T[i]
+        v*= scale
+        projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
+        v90 = np.dot(rotation, v)
+        v90*= length*prop/np.linalg.norm(v90)
+        bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
+                               [y+v[1]+v90[1], y+v[1]-v90[1]]), group=group)
+    return bounds, projectVs
+
+def plot_bounds(D, T, beta=0, offset=(0,0), length=1, widths=None):
+    ''' Plots spike coding network bounding box in 2D.
+
+    Parameters
+    ----------
+    D : array
+        Decoding weights
+    T : array
+        array of spiking thresholds
+    beta : float
+        network cost parameter
+    offset : list/tuple/array
+        [x,y] offset of the bounding box
+    length : float
+        length of the bounding box vertices
+    widths : array
+        Array of linewidths for each vertice
+
+    Returns
+    -------
+    HoloViews overlay
+        The boundary box, offset by 'offset'
+    HoloViews overlay
+        The vectors determining the boundary box, offset by ''offset'
+    '''
+    # infer some Parameters
+    N = D.shape[1]
+    if widths is None: widths = np.ones(N)*2
+
+    # get offsets
+    x, y = offset
+
+    # get thresholds
+    Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    T = np.diag(Omeg)/2
+
+    # plot projection vectors and bounding box
+    angle = np.pi/2
+    rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+    projectVs = hv.Overlay()
+    bounds = hv.Overlay()
+    for i in range(N):
+        v = np.copy(D[:, i])
+        norm = np.linalg.norm(v)
+        v/= norm**2
+        v*= T[i]
+        projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]))
+        v90 = np.dot(rotation, v)
+        v90*= length/np.linalg.norm(v90)
+        style = {'line_width':widths[i]}
+        bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
+                               [y+v[1]+v90[1], y+v[1]-v90[1]]))(style=style)
+
+    return bounds, projectVs
+
+def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
+                  widths=None, alphas=None):
+    ''' Plots the bounding box, for a given offset in z directionself.
+
+    This function is specifically for bounding boxes which are cone-shaped.
+
+    For the offset in z it will be calculated what the net size of the
+    bounding box is.
+
+    Parameters
+    ----------
+    D : array
+        Decoding weights, 3D
+    T : array
+        array of spiking thresholds
+    beta : float
+        network cost parameter
+    offset : list/tuple/array
+        [x,y,z] offset of the bounding box
+    length : float
+        length of the bounding box vertices
+    widths : array
+        Array of linewidths for each vertice
+    alphas : array
+        Array of alphas for each vertice
+
+    Returns
+    -------
+    HoloViews overlay
+        The boundary box, offset by 'offset'
+    HoloViews overlay
+        The vectors determining the boundary box, offset by ''offset'
+    '''
+    # infer some parameters
+    N = D.shape[1]
+    if widths is None: widths = np.ones(N)*2
+    if alphas is None: widths = np.ones(N)
+
+    # get offsets
+    x, y, z = offset
+
+    # get thresholds for 2D box at height 0
+    D2 = D[:2, :]
+    Omeg = np.dot(D2.T, D2) + np.identity(N)*beta
+    T = np.diag(Omeg)
+
+    # plot projection vectors and bounding box
+    angle = np.pi/2
+    rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+    projectVs = hv.Overlay()
+    bounds = hv.Overlay()
+    for i in range(N):
+        v = np.copy(D2[:, i])
+        norm = np.linalg.norm(v)
+        v/= norm
+        scale = T[i]/norm**1-z
+        if scale<0: scale=0
+        prop = scale*norm**1/T[i]
+        v*= scale
+        projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
+        v90 = np.dot(rotation, v)
+        v90*= length*prop/np.linalg.norm(v90)
+        style = {'line_width':widths[i], 'alpha':alphas[i]}
+        bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
+                               [y+v[1]+v90[1], y+v[1]-v90[1]]),
+                               group=group)(style=style)
+    return bounds, projectVs
+
+def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
+                      boundlength=0.05, trail_length=40, step_size=10,
+                      spike_tau=1., dt=0.01):
+    """For spike coding networks (SCNs), animates the error inside bounding box.
+
+    This function is specifically for cone-shaped bounding boxes.
+
+    Parameters
+    ----------
+    D : array
+        2D array which is the SCN decoding matrix
+    T : array
+        1D array with SCN spiking thresholds
+    beta : float
+        SCN cost parameter
+    E : array
+        2D array of the error
+    x : array
+        2D array of the actual stimulus
+    o : array
+        N by nT array of 0s and 1s indicating spikes
+    Tstart : int
+        Starting timestep
+    Tend : int
+        Final timestep (if None, will use final timestep)
+    boundlength : float
+        How long to make each bounding edge
+    trail_length : int
+        How many timesteps to use for the error trail
+    step_size : int
+        How many timesteps to skip for each frame
+    spike_tau/dt : floats
+        Determine time constant on increased line thickness with spikes
+
+    Output
+    ------
+    Holoviews HoloMap
+    """
+    # get some parameters
+    if Tend is None: Tend = E.shape[1]
+    framenums = range(Tstart, Tstart+Tend,step_size)
+
+    # turn spikes into line ticknesses
+    s = np.zeros(o.shape)
+    for i in range(o.shape[1]-1):
+        s[:, i+1]=s[:, i]+dt*(-s[:, i]/spike_tau+o[:, i]/dt)
+
+    # based on spiking, determine bound widths (so for a spike, a cell's
+    # bound changes size)
+    widths = {f: np.ones(D.shape[1])*2 for f in framenums}
+    alphas = {f: np.ones(D.shape[1]) for f in framenums}
+    for f in framenums:
+        widths[f] += s[:, f]*2
+        alphas[f] += s[:, f]
+        alphas[f]/=alphas[f].max()
+
+    # Define the animation frames
+    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]))
+                 for f in framenums}
+    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)
+                 for f in framenums}
+    frames = {f: frames[f]*hv.VLine(x[0, f])*hv.HLine(x[1, f])
+                 for f in framenums}
+    frames = {f: frames[f]*plot_bounds_z(D, T, beta, (0, 0, E[2, f]),
+                                         length=boundlength,
+                                         widths=widths[f],
+                                         alphas=alphas[f])[0]
+                 for f in framenums}
+    # return animation
+    return hv.HoloMap(frames)*hv.Scatter(zip([0], [0]), group='origin')
+
+def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
+    """For spike coding networks (SCNs), animates signal tracking.
+
+    Parameters
+    ----------
+    x : array
+        2D array of the actual stimulus
+    x_ : array
+        2D array of the estimated stimulus
+    o : array
+        N by nT array of 0s and 1s indicating spikes
+    times : array
+        array of times
+    Tstart : int
+        Starting timestep
+    Tend : int
+        Final timestep (if None, will use final timestep)
+    step_size : int
+        How many timesteps to skip for each frame
+
+    Output
+    ------
+    Holoviews HoloMap
+    """
+    # get some parameters
+    if Tend is None: Tend = x.shape[1]
+    framenums = range(Tstart, Tstart+Tend,step_size)
+
+    # Define the animation frames
+    frames = {f: hv.Curve(zip(times[0:f:step_size], x[0,0:f:step_size])) for f in framenums}
+    frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[0,0:f:step_size])) for f in framenums}
+    for s in range(1, x.shape[0]):
+        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x[s,0:f:step_size])) for f in framenums}
+        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[s,0:f:step_size])) for f in framenums}
+
+    # return animation
+    return hv.HoloMap(frames)
+>>>>>>> 4836cc2c0c27d3263c64bc51101a0054c0d0911a

@@ -616,7 +616,8 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
         projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
         v90 = np.dot(rotation, v)
         v90*= length*prop/np.linalg.norm(v90)
-        style = {'line_width':widths[i], 'alpha':alphas[i]}
+        style = {'line_width':widths[i], 'linewidth':widths[i],
+                 'alpha':alphas[i]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
                                group=group)(style=style)

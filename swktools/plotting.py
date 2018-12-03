@@ -692,7 +692,7 @@ def animate_error_box(D, T, beta, E, x, o, Tstart=0, Tend=None,
     # return animation
     return hv.HoloMap(frames)*hv.Scatter(zip([0], [0]), group='origin')
 
-def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
+def animate_signal_tracking(x, x_, times, Tstart=0, Tend=None, step_size=10):
     """For spike coding networks (SCNs), animates signal tracking.
 
     Parameters
@@ -701,8 +701,6 @@ def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
         2D array of the actual stimulus
     x_ : array
         2D array of the estimated stimulus
-    o : array
-        N by nT array of 0s and 1s indicating spikes
     times : array
         array of times
     Tstart : int
@@ -721,11 +719,102 @@ def animate_signal_tracking(x, x_, o, times, Tstart=0, Tend=None, step_size=10):
     framenums = range(Tstart, Tstart+Tend,step_size)
 
     # Define the animation frames
-    frames = {f: hv.Curve(zip(times[0:f:step_size], x[0,0:f:step_size])) for f in framenums}
-    frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[0,0:f:step_size])) for f in framenums}
+    frames = {f: hv.Curve(
+                            zip(times[0:f:step_size], x[0, 0:f:step_size])
+                          ) for f in framenums}
+    frames = {f: frames[f]*hv.Curve(
+                                zip(times[0:f:step_size], x_[0, 0:f:step_size])
+                                    ) for f in framenums}
     for s in range(1, x.shape[0]):
-        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x[s,0:f:step_size])) for f in framenums}
-        frames = {f: frames[f]*hv.Curve(zip(times[0:f:step_size], x_[s,0:f:step_size])) for f in framenums}
+        frames = {f: frames[f]*hv.Curve(
+                                zip(times[0:f:step_size], x[s, 0:f:step_size])
+                                        ) for f in framenums}
+        frames = {f: frames[f]*hv.Curve(
+                                zip(times[0:f:step_size], x_[s, 0:f:step_size])
+                                        ) for f in framenums}
+
+    # return animation
+    return hv.HoloMap(frames)
+
+def spike_plot(o, times, base_offset, offset):
+    """Plots a set of neurons' spikes, given a 2d array of 0's and 1's.
+
+    Parameters
+    ----------
+    o : array
+        2D-array of 0's and 1's (1's being spikes),
+        of size (n_cells, n_timepoints)
+    times : array
+        array of times
+    base_offset : float
+        y-axis offset of all spikes
+    offset : float
+        y-axis offset between each row of spikes
+    Tstart : int
+        Starting timestep
+    Tend : int
+        Final timestep (if None, will use final timestep)
+    step_size : int
+        How many timesteps to skip for each frame
+        y-axis offset between each row of spikes
+
+    Returns
+    -------
+    Holoviews Overlay
+        An overlay with all the spikes shown
+    """
+    # make spike plot animation
+    out = hv.Overlay()
+    for i in range(o.shape[0]):
+        spiketimes = times[np.where(o[i, :]==1)[0]]
+        if len(spiketimes)>0:
+            out *= hv.Scatter(
+                zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset)
+                             )
+    return out
+
+def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,
+           step_size=10):
+    """Animates a set of neurons' spikes, given a 2d array of 0's and 1's.
+
+    Parameters
+    ----------
+    o : array
+       2D-array of 0's and 1's (1's being spikes),
+       of size (n_cells, n_timepoints)
+    times : array
+       array of times
+    base_offset : float
+       y-axis offset of all spikes
+    offset : float
+        y-axis offset between each row of spikes
+    Tstart : int
+       Starting timestep
+    Tend : int
+       Final timestep (if None, will use final timestep)
+    step_size : int
+       How many timesteps to skip for each frame
+       y-axis offset between each row of spikes
+    Tstart : int
+       Starting timestep
+    Tend : int
+       Final timestep (if None, will use final timestep)
+    step_size : int
+       How many timesteps to skip for each frame
+
+    Returns
+    -------
+    Holoviews Overlay
+       An overlay with all the spikes shown
+    """
+    # get some parameters
+    if Tend is None: Tend = o.shape[1]
+    framenums = range(Tstart, Tstart+Tend,step_size)
+
+    # Define the animation frames
+    frames = {f: hv.Curve([])*spike_plot(
+                o[:, 0:f], times[0:f], base_offset, offset
+                           ) for f in framenums}
 
     # return animation
     return hv.HoloMap(frames)

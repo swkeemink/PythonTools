@@ -623,8 +623,8 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
                                group=group)(style=style)
     return bounds, projectVs
 
-def animate_error_box(D, beta, E, x, o, Tstart=0, Tend=None,
-                      boundlength=0.05, trail_length=40, step_size=10,
+def animate_error_box_z(D, beta, E, x, o, Tstart=0, Tend=None,
+                      boundlength=0.5, trail_length=40, step_size=10,
                       spike_tau=1., dt=0.01):
     """For spike coding networks (SCNs), animates the error inside bounding box.
 

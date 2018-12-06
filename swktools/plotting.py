@@ -627,12 +627,10 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
                                group=group)(style=style)
     return bounds, projectVs
 
-def animate_error_box_z(D, beta, E, x, o, Tstart=0, Tend=None,
+def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
                       boundlength=0.5, trail_length=40, step_size=10,
-                      spike_tau=1., dt=0.01):
+                      spike_tau=.3, dt=0.01):
     """For spike coding networks (SCNs), animates the error inside bounding box.
-
-    This function is specifically for cone-shaped bounding boxes.
 
     Parameters
     ----------
@@ -679,10 +677,88 @@ def animate_error_box_z(D, beta, E, x, o, Tstart=0, Tend=None,
     # bound changes size)
     widths = {f: np.ones(D.shape[1])*2 for f in framenums}
     alphas = {f: np.ones(D.shape[1]) for f in framenums}
+    alpha_max = 0
     for f in framenums:
         widths[f] += s[:, f]*2
         alphas[f] += s[:, f]
-        alphas[f]/=alphas[f].max()
+        if alphas[f].max() > alpha_max:
+            alpha_max = alphas[f].max()
+    for f in framenums:
+        alphas[f]/=alpha_max
+
+    # Define the animation frames
+    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]))
+                 for f in framenums}
+    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)
+                 for f in framenums}
+    frames = {f: frames[f]*hv.VLine(x[0, f])*hv.HLine(x[1, f])
+                 for f in framenums}
+    frames = {f: frames[f]*plot_bounds(D, beta, (0, 0),
+                                         length=boundlength,
+                                         widths=widths[f],
+                                         alphas=alphas[f])[0]
+                 for f in framenums}
+    # return animation
+    return hv.HoloMap(frames)*hv.Scatter(zip([0], [0]), group='origin')
+
+def animate_error_box_z(D, beta, E, x, o, Tstart=0, Tend=None,
+                      boundlength=0.5, trail_length=40, step_size=10,
+                      spike_tau=.3, dt=0.01):
+    """For spike coding networks (SCNs), animates the error inside bounding box.
+
+    Parameters
+    ----------
+    D : array
+        2D array which is the SCN decoding matrix
+    beta : float
+        SCN cost parameter
+    E : array
+        3D array of the error
+    x : array
+        2D array of the actual stimulus
+    o : array
+        N by nT array of 0s and 1s indicating spikes
+    Tstart : int
+        Starting timestep
+    Tend : int
+        Final timestep (if None, will use final timestep)
+    boundlength : float
+        How long to make each bounding edge
+    trail_length : int
+        How many timesteps to use for the error trail
+    step_size : int
+        How many timesteps to skip for each frame
+    spike_tau/dt : floats
+        Determine time constant on increased line thickness with spikes
+
+    Output
+    ------
+    Holoviews HoloMap
+    """
+    # get some parameters
+    if Tend is None: Tend = E.shape[1]
+    framenums = range(Tstart, Tstart+Tend,step_size)
+    N = D.shape[1]
+    Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    T = np.diag(Omeg)/2
+
+    # turn spikes into line ticknesses
+    s = np.zeros(o.shape)
+    for i in range(o.shape[1]-1):
+        s[:, i+1]=s[:, i]+dt*(-s[:, i]/spike_tau+o[:, i]/dt)
+
+    # based on spiking, determine bound widths (so for a spike, a cell's
+    # bound changes size)
+    widths = {f: np.ones(D.shape[1])*2 for f in framenums}
+    alphas = {f: np.ones(D.shape[1]) for f in framenums}
+    alpha_max = 0
+    for f in framenums:
+        widths[f] += s[:, f]*2
+        alphas[f] += s[:, f]
+        if alphas[f].max() > alpha_max:
+            alpha_max = alphas[f].max()
+    for f in framenums:
+        alphas[f]/=alpha_max
 
     # Define the animation frames
     frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]))

@@ -5,7 +5,7 @@ In this script will be functions related to running networks.
 import numpy as np
 import warnings
 
-def run_scn(x, D, beta, tau, dt, alpha=None):
+def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.
 
     Should have N neurons and M stimuli, with N >= M, and nT data points.
@@ -28,6 +28,8 @@ def run_scn(x, D, beta, tau, dt, alpha=None):
         Time step.
     alpha : function
         scaling function of decoder, of form alpha(x, x_)
+    sigma : float
+        Gaussian noise sigma on voltages
 
     Returns
     -------
@@ -61,7 +63,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None):
     for i in range(1, nT):
         # dynamics
         dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau) - np.dot(Omeg, o[:, i-1]/dt)
-        V[:, i] = V[:, i-1] + dt*dV
+        V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
         r[:, i] = r[:, i-1] + dt*(-r[:, i-1]/tau + o[:, i-1]/dt)
 #         x_[:, i] = x_[:, i-1] + dt*(-x_[:, i-1]/tau + np.dot(D, o[:, i-1]/dt))
 

@@ -511,6 +511,8 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
         length of the bounding box vertices
     widths : array
         Array of linewidths for each vertice
+    alphas : array
+        Array of alphas for each vertice
 
     Returns
     -------
@@ -522,6 +524,7 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
     # infer some Parameters
     N = D.shape[1]
     if widths is None: widths = np.ones(N)*2
+    if alphas is None: alphas = np.ones(N)
     Omeg = np.dot(D.T, D) + np.identity(N)*beta
     T = np.diag(Omeg)
 
@@ -546,7 +549,8 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
         projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]))
         v90 = np.dot(rotation, v)
         v90*= length/np.linalg.norm(v90)
-        style = {'line_width':widths[i]}
+        style = {'line_width':widths[i], 'linewidth':widths[i],
+                 'alpha':alphas[i]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]))(style=style)
 

@@ -496,15 +496,13 @@ def plot_bounds_z(D, offset=(0,0,0), length=1, group='Curve'):
                                [y+v[1]+v90[1], y+v[1]-v90[1]]), group=group)
     return bounds, projectVs
 
-def plot_bounds(D, T, beta=0, offset=(0,0), length=1, widths=None):
+def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
     ''' Plots spike coding network bounding box in 2D.
 
     Parameters
     ----------
     D : array
         Decoding weights
-    T : array
-        array of spiking thresholds
     beta : float
         network cost parameter
     offset : list/tuple/array
@@ -524,6 +522,8 @@ def plot_bounds(D, T, beta=0, offset=(0,0), length=1, widths=None):
     # infer some Parameters
     N = D.shape[1]
     if widths is None: widths = np.ones(N)*2
+    Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    T = np.diag(Omeg)
 
     # get offsets
     x, y = offset

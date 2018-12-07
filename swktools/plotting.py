@@ -552,7 +552,8 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
         style = {'line_width':widths[i], 'linewidth':widths[i],
                  'alpha':alphas[i]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
-                               [y+v[1]+v90[1], y+v[1]-v90[1]]))(style=style)
+                               [y+v[1]+v90[1], y+v[1]-v90[1]]),
+                               kdims='x1 error', vdims='x2 error')(style=style)
 
     return bounds, projectVs
 
@@ -687,7 +688,8 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
         alphas[f]/=alpha_max
 
     # Define the animation frames
-    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]))
+    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]),
+                            kdims='x1 error', vdims='x2 error')
                  for f in framenums}
     frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)
                  for f in framenums}
@@ -761,7 +763,8 @@ def animate_error_box_z(D, beta, E, x, o, Tstart=0, Tend=None,
         alphas[f]/=alpha_max
 
     # Define the animation frames
-    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]))
+    frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]),
+                            kdims='x1 error', vdims='x2 error')
                  for f in framenums}
     frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)
                  for f in framenums}

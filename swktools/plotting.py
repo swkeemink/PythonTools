@@ -678,7 +678,7 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
 
     # based on spiking, determine bound widths (so for a spike, a cell's
     # bound changes size)
-    widths = {f: np.ones(D.shape[1])*2 for f in framenums}
+    widths = {f: np.ones(D.shape[1])*3 for f in framenums}
     alphas = {f: np.ones(D.shape[1]) for f in framenums}
     alpha_max = 0
     # for f in framenums:

@@ -5,6 +5,8 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
+# get colors
+colors = hv.core.options.Cycle.default_cycles['default_colors']
 
 def plot3d(traj, ntraj=1, labels=['x', 'y', 'z'], ax=None):
     """Plot the 3d trajectory in traj in 4D.

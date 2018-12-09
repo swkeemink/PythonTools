@@ -681,13 +681,13 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
     widths = {f: np.ones(D.shape[1])*2 for f in framenums}
     alphas = {f: np.ones(D.shape[1]) for f in framenums}
     alpha_max = 0
-    for f in framenums:
-        widths[f] += s[:, f]*2
-        alphas[f] += s[:, f]
-        if alphas[f].max() > alpha_max:
-            alpha_max = alphas[f].max()
-    for f in framenums:
-        alphas[f]/=alpha_max
+    # for f in framenums:
+    #     widths[f] += s[:, f]*2
+    #     alphas[f] += s[:, f]
+    #     if alphas[f].max() > alpha_max:
+    #         alpha_max = alphas[f].max()
+    # for f in framenums:
+    #     alphas[f]/=alpha_max
 
     # Define the animation frames
     frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]),

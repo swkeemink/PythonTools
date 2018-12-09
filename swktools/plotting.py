@@ -552,7 +552,7 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
         v90 = np.dot(rotation, v)
         v90*= length/np.linalg.norm(v90)
         style = {'line_width':widths[i], 'linewidth':widths[i],
-                 'alpha':alphas[i]}
+                 'alpha':alphas[i], 'color':colors[i%len(colors)]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
                                kdims='x1 error', vdims='x2 error')(style=style)
@@ -624,7 +624,7 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
         v90 = np.dot(rotation, v)
         v90*= length*prop/np.linalg.norm(v90)
         style = {'line_width':widths[i], 'linewidth':widths[i],
-                 'alpha':alphas[i]}
+                 'alpha':alphas[i], 'color':colors[i%len(colors)]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
                                group=group)(style=style)
@@ -691,11 +691,15 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
 
     # Define the animation frames
     frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]),
-                            kdims='x1 error', vdims='x2 error')
+                            kdims='x1 error', vdims='x2 error')(
+                                                        style={'color':'k'})
                  for f in framenums}
-    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)
+    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)(
+                                                        style={'color':'k'})
                  for f in framenums}
-    frames = {f: frames[f]*hv.VLine(x[0, f])*hv.HLine(x[1, f])
+    frames = {f: frames[f]*hv.Scatter(
+                            zip([x[0, f]], [x[1, f]])
+                                      )(style={'color':'w', 'marker':'x'})
                  for f in framenums}
     frames = {f: frames[f]*plot_bounds(D, beta, (0, 0),
                                          length=boundlength,
@@ -807,20 +811,22 @@ def animate_signal_tracking(x, x_, times, Tstart=0, Tend=None, step_size=10):
     framenums = range(Tstart, Tstart+Tend,step_size)
 
     # Define the animation frames
+    style_x = {'color':'k', 'alpha':0.5, 'linestyle':'--'}
+    style_x_ = {'color':'k', 'alpha':1}
     step_size=1
     frames = {f: hv.Curve(
                             zip(times[0:f:step_size], x[0, 0:f:step_size])
-                          ) for f in framenums}
+                          )(style=style_x) for f in framenums}
     frames = {f: frames[f]*hv.Curve(
                                 zip(times[0:f:step_size], x_[0, 0:f:step_size])
-                                    ) for f in framenums}
+                                    )(style=style_x_) for f in framenums}
     for s in range(1, x.shape[0]):
         frames = {f: frames[f]*hv.Curve(
                                 zip(times[0:f:step_size], x[s, 0:f:step_size])
-                                        ) for f in framenums}
+                                        )(style=style_x) for f in framenums}
         frames = {f: frames[f]*hv.Curve(
                                 zip(times[0:f:step_size], x_[s, 0:f:step_size])
-                                        ) for f in framenums}
+                                        )(style=style_x_) for f in framenums}
 
     # return animation
     return hv.HoloMap(frames)
@@ -857,9 +863,10 @@ def spike_plot(o, times, base_offset, offset):
     for i in range(o.shape[0]):
         spiketimes = times[np.where(o[i, :]==1)[0]]
         if len(spiketimes)>0:
+            style = {'color':colors[i%len(colors)]}
             out *= hv.Scatter(
-                zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset)
-                             )
+                zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset),
+                              group='spikes')(style=style)
     return out
 
 def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,

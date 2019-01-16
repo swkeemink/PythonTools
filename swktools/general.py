@@ -8,6 +8,40 @@ from skimage.feature import register_translation as rt
 from scipy.ndimage.fourier import fourier_shift
 from scipy import signal
 
+def define_full_grating(imsize, theta, lam, phase):
+    """Returns a full-field grating.
+
+    Parameters
+    ----------
+    imsize : int
+        Image size in pixels
+    theta : float
+        Orientation
+    lam : int
+        wavelength (number of pixels per cycle)
+    phase : float
+        Number between 0 and 1 indicating the phase
+
+    Returns
+    -------
+    array
+        imsize*imsize array
+    """
+    # infer actual phase and frequency
+    phaserad = phase*2*np.pi
+    freq = imsize/(lam/4.)
+
+    # define coordinates
+    X = np.arange(0,imsize)
+    X0 = X/(imsize) -0.5
+    Xf = X0*freq*np.pi*2
+    [Xm, Ym] = np.meshgrid(Xf,Xf)
+
+    # define grating
+    Xt = Xm * np.cos(theta)
+    Yt = Ym * np.sin(theta)
+    XYf = Xt + Yt
+    return np.sin(XYf+phaserad)
 
 def spike_match(real, est, maxdelay):
     """Match real spiketimes with estimated spiketimes.

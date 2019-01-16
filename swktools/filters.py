@@ -14,7 +14,7 @@ def RandomFilter(settings, l):
     return np.random.rand(l, l)
 
 def DoG(settings, l):
-    ''' For a given image size, make Difference of Gaussians filter.
+    """ For a given image size, make Difference of Gaussians filter.
 
     Parameters
     ----------
@@ -33,7 +33,7 @@ def DoG(settings, l):
     -------
     filt
         The spatial filter (2d array)
-    '''
+    """
     scales, means, sigmas = settings['scales'], settings['means'], settings['sigmas']
 
     # get x,y values for gaussians

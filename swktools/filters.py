@@ -20,7 +20,7 @@ def DoG(settings, l):
     ----------
     settings : dictionary
         contains:
-        'scales' : arry
+        'scales' : array
             scales of each Gaussian
         'means' : list of arrays
             list of 2D means

@@ -11,7 +11,7 @@ from scipy.stats import multivariate_normal
 def RandomFilter(settings, l):
     """Generates a completely random filter.
     """
-    return np.random.rand(l, l)
+    return np.random.randn(l, l)
 
 def DoG(settings, l):
     """ For a given image size, make Difference of Gaussians filter.

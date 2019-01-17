@@ -193,7 +193,21 @@ def CreateSettingsList(N, filter_type, l):
             out[i] = settings
 
     elif filter_type == 'Gabor':
-        raise NotImplementedError()
+        frequencies = np.random.rand(N)*0.999+0.001
+        thetas = np.random.rand(N)*2*np.pi
+        sigma = np.random.rand(N)*10+1
+        offset = np.random.rand(N)
+        xyoffsets = (np.random.rand(N, 2)-0.5)*l
+        for i in range(N):
+            settings = {}
+            settings['frequency'] = frequencies[i]
+            settings['theta'] = thetas[i]
+            settings['sigma'] = sigma[i]
+            settings['offset'] = offset[i]
+            settings['xoffset'] = xyoffsets[i, 0]
+            settings['yoffset'] = xyoffsets[i, 1]
+            out[i] = settings
+
     else:
         raise ValueError('Use either DoG or Gabor for filter_type.')
 

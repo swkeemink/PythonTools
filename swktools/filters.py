@@ -49,6 +49,94 @@ def DoG(settings, l):
 
     return filt
 
+def gabor(settings, l):
+    """ For a given image size, make Gabor filter.
+
+    Parameters
+    ----------
+    settings : dictionary
+        contains following keys:
+        'frequency', 'theta', 'sigma',
+        'offset', 'xoffset', 'yoffset'
+        See swktools.filters.gabor_kernel() help for more information on
+        what these should be.
+    l : int
+        width and height of image
+
+    Returns
+    -------
+    array
+        The spatial filter (2d array)
+    """
+    # get settings
+    frequency = settings['frequency']
+    theta = settings['theta']
+    sigma = settings['sigma']
+    offset = settings['offset']
+    xoffset, yoffset = settings['xoffset'], settings['yoffset']
+
+    # return filter
+    filt =  gabor_kernel(frequency, l, theta, sigma, offset,
+                                xoffset, yoffset)
+    return filt
+
+def gabor_kernel(frequency, imsize=10, theta=0, sigma=1, offset=0, xoffset=0,
+                 yoffset=0):
+    """Return complex 2D Gabor filter kernel.
+
+    Adopted from https://github.com/scikit-image/scikit-image/blob/master/skimage/filters/_gabor.py#L16
+
+    Gabor kernel is a Gaussian kernel modulated by a complex harmonic function.
+    Harmonic function consists of an imaginary sine function and a real
+    cosine function. Spatial frequency is inversely proportional to the
+    wavelength of the harmonic and to the standard deviation of a Gaussian
+    kernel. The bandwidth is also inversely proportional to the standard
+    deviation.
+
+    Parameters
+    ----------
+    frequency : float
+        Spatial frequency of the harmonic function. Specified in pixels.
+    imsize : int
+        Size of image
+    theta : float, optional
+        Orientation in radians. If 0, the harmonic is in the x-direction.
+    sigma : float, optional
+        Standard deviation in x- and y-directions.
+    offset : float, optional
+        Phase offset of harmonic function in radians.
+    xoffset, yoffset : floats
+        Coordinate offsets from middle
+
+    Returns
+    -------
+    g : complex array
+        Complex filter kernel.
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Gabor_filter
+    .. [2] https://web.archive.org/web/20180127125930/http://mplab.ucsd.edu/tutorials/gabor.pdf
+    """
+    # find limits
+    x0 = (imsize-1)/2.
+    y0 = (imsize-1)/2.
+    y, x = np.mgrid[-y0:y0 + 1, -x0:x0 + 1]
+
+    # offset values
+    x -= xoffset
+    y -= yoffset
+
+    # calculate rotation
+    rotx = x * np.cos(theta) + y * np.sin(theta)
+    roty = -x * np.sin(theta) + y * np.cos(theta)
+
+    # calculate filter
+    g = np.exp(-0.5 * (rotx ** 2 / sigma ** 2 + roty ** 2 / sigma ** 2))
+    g /= 2 * np.pi * sigma**2
+    g *= np.cos(2 * np.pi * frequency * rotx + offset)
+
+    return g
+
 def CreateFilterBank(filtfunc, settings_list, l):
     """Creates a filter bank for a given filter function
 

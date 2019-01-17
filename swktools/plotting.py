@@ -866,7 +866,9 @@ def spike_plot(o, times, base_offset, offset):
             style = {'color':colors[i%len(colors)]}
             out *= hv.Scatter(
                 zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset),
-                              group='spikes')(style=style)
+                              group='spikes',
+                              kdims='Time (a.u.)',
+                              vdims='Neuron #')(style=style)
     return out
 
 def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,

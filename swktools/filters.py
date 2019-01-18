@@ -186,8 +186,8 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
     list
         A list of settings
     """
-    out = ['']*N
     if distribution == 'Random':
+        out = ['']*N
         if filter_type == 'DoG':
             scales = np.sign(np.random.rand(N)-0.1)
             sigmas = np.random.rand(N)*l/2

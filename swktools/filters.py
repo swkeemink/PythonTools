@@ -216,7 +216,32 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
         else:
             raise ValueError('Use either DoG or Gabor for filter_type.')
     elif distribution == 'Even':
-        raise NotImplementedError()
+        if filter_type == 'DoG':
+            raise NotImplementedError()
+        elif filter_type == 'Gabor':
+            Nxy = np.ceil(np.sqrt(N))
+            xyoffsets = np.linspace(-l/2, l/2, Nxy)
+            frequencies = np.linspace(0.01, 0.999, Nxy)
+            thetas = np.linspace(0, 2*np.pi, Nxy)
+            sigmas = np.linspace(l/100., l/15., Nxy)
+            offsets = np.linspace(0, 1, np.ceil(np.sqrt(Nxy)))
+            count = 0
+            out = ['']*len(xyoffsets)**2*len(frequencies)*len(thetas)*len(sigmas)*len(offsets)
+            for x in xyoffsets:
+                for y in xyoffsets:
+                    for freq in frequencies:
+                        for theta in thetas:
+                            for sigmai, sigma in enumerate(sigmas):
+                                for offset in offsets:
+                                    settings = {}
+                                    settings['frequency'] = freq
+                                    settings['theta'] = theta
+                                    settings['sigma'] = sigma
+                                    settings['offset'] = offset
+                                    settings['xoffset'] = x
+                                    settings['yoffset'] = y
+                                    out[count] = settings
+                                    count += 1
     else:
         raise ValueError('Use correct distribution type.')
 

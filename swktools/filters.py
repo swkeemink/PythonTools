@@ -178,6 +178,8 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
                    and for filter settings
         'Even' - filters are distributed evenly across the different feature
                  dimensions.
+                 In this case it can not be guaranteed you get exactly N
+                 neurons, N is used as a reference
 
     Returns
     -------

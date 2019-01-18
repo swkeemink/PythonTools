@@ -161,7 +161,7 @@ def CreateFilterBank(filtfunc, settings_list, l):
         out[i] = filt.reshape(l*l)
     return out
 
-def CreateSettingsList(N, filter_type, l):
+def CreateSettingsList(N, filter_type, l, distribution='Random'):
     """Creates a settings list for CreateFilterBank function.
 
     Parameters
@@ -173,6 +173,11 @@ def CreateSettingsList(N, filter_type, l):
         'Gabor' : Gabor filters (Not yet implemented)
     l : int
         Image size
+    distribution : string
+        'Random' - filters are just completely random within the image bounds,
+                   and for filter settings
+        'Even' - filters are distributed evenly across the different feature
+                 dimensions.
 
     Returns
     -------
@@ -180,35 +185,37 @@ def CreateSettingsList(N, filter_type, l):
         A list of settings
     """
     out = ['']*N
-
-    if filter_type == 'DoG':
-        scales = np.sign(np.random.rand(N)-0.1)
-        sigmas = np.random.rand(N)*l/2
-        means = np.random.rand(N, 2)*l
-        for i in range(N):
-            settings = {}
-            settings['scales'] = [scales[i], -scales[i]]
-            settings['means'] = [means[i], means[i]]
-            settings['sigmas'] = [sigmas[i], sigmas[i]*2]
-            out[i] = settings
-
-    elif filter_type == 'Gabor':
-        frequencies = np.random.rand(N)*0.999+0.001
-        thetas = np.random.rand(N)*2*np.pi
-        sigma = np.random.rand(N)*10+1
-        offset = np.random.rand(N)
-        xyoffsets = (np.random.rand(N, 2)-0.5)*l
-        for i in range(N):
-            settings = {}
-            settings['frequency'] = frequencies[i]
-            settings['theta'] = thetas[i]
-            settings['sigma'] = sigma[i]
-            settings['offset'] = offset[i]
-            settings['xoffset'] = xyoffsets[i, 0]
-            settings['yoffset'] = xyoffsets[i, 1]
-            out[i] = settings
-
+    if distribution == 'Random':
+        if filter_type == 'DoG':
+            scales = np.sign(np.random.rand(N)-0.1)
+            sigmas = np.random.rand(N)*l/2
+            means = np.random.rand(N, 2)*l
+            for i in range(N):
+                settings = {}
+                settings['scales'] = [scales[i], -scales[i]]
+                settings['means'] = [means[i], means[i]]
+                settings['sigmas'] = [sigmas[i], sigmas[i]*2]
+                out[i] = settings
+        elif filter_type == 'Gabor':
+            frequencies = np.random.rand(N)*0.999+0.001
+            thetas = np.random.rand(N)*2*np.pi
+            sigma = np.random.rand(N)*10+1
+            offset = np.random.rand(N)
+            xyoffsets = (np.random.rand(N, 2)-0.5)*l
+            for i in range(N):
+                settings = {}
+                settings['frequency'] = frequencies[i]
+                settings['theta'] = thetas[i]
+                settings['sigma'] = sigma[i]
+                settings['offset'] = offset[i]
+                settings['xoffset'] = xyoffsets[i, 0]
+                settings['yoffset'] = xyoffsets[i, 1]
+                out[i] = settings
+        else:
+            raise ValueError('Use either DoG or Gabor for filter_type.')
+    elif distribution == 'Even':
+        raise NotImplementedError()
     else:
-        raise ValueError('Use either DoG or Gabor for filter_type.')
+        raise ValueError('Use correct distribution type.')
 
     return out

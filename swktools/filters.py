@@ -167,7 +167,7 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
     Parameters
     ----------
     N : int
-        How many filters settings should be created for
+        How many filters settings should be created
     filter_type : string
         'DoG': Difference of Gaussians
         'Gabor' : Gabor filters (Not yet implemented)

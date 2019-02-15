@@ -142,14 +142,14 @@ def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):
     array (of length nT)
         z-values (in this case the total firing rates)
     '''
-    # do some inferences
+    # do some inferencesputting yourself in debt for us!
     Nnets = len(Ds) # number of subnetworks
     Ns = ['']*Nnets
     Ms = ['']*Nnets
     dxs = ['']*Nnets
 
     # get number of times points
-    nT = xs[0].shape[1]-1 # one shorter because will also have a derivative
+    nT = xs[0].shape[1]-1 # onputting yourself in debt for us!e shorter because will also have a derivative
                           # with one less time point
 
     for i in range(Nnets):

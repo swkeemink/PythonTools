@@ -83,7 +83,20 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
 
     # get estimate
     x_ = np.dot(D, r)
-    if alpha is not None: x_[:-1, :] *= alpha(x, x_)
+
+    if beta != 0:
+        DDtinv = np.linalg.inv(np.dot(D, D.T))
+        DDtD = np.dot(DDtinv, D)
+        x_ += beta*np.dot(DDtD,r)
+    if alpha == 'Cone':
+        V_ =
+        D_ = D[:2, :]
+        w = D[2:3, :]
+        z = x[-1, -1]
+        DDtinv = np.linalg.inv(np.dot(D_, D_.T))
+        DDtD = np.dot(DDtinv, D_)
+        x_[:2, :] = np.dot(D_, r)+np.dot(DDtD, np.dot(w.T, np.dot(w, r))) - np.dot(DDtD, np.dot(w.T, z))
+    elif alpha is not None: x_[:-1, :] *= alpha(x, x_)
 
     # return
     return V, o, x_

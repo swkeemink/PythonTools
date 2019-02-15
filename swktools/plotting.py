@@ -102,7 +102,7 @@ def whisk_compare(Points, labels=None, ref=0, vdims=['score'], group='Bars',
         npoints = len(Points[i])
         groups += [labels[i] for j in range(npoints)]
     allpoints = np.concatenate(Points)
-    print len(groups)
+
     whisk = hv.BoxWhisker((groups, allpoints),
                           kdims=[' '], vdims=vdims)
 
@@ -117,7 +117,6 @@ def whisk_compare(Points, labels=None, ref=0, vdims=['score'], group='Bars',
         sign = scipy.stats.wilcoxon(points1, points2)[1]
         fontsize = 20
         offset = 0.02
-        print sign
         if sign < 0.0005:
             sig_text = '***'
             fontsize = 20

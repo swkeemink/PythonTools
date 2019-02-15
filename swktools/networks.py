@@ -26,8 +26,10 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
         Timescale of decoder and thus membrane potential.
     dt : float
         Time step.
-    alpha : function
+    alpha : function or string
         scaling function of decoder, of form alpha(x, x_)
+        if 'None', nothing will be done
+        if 'Cone', apply general decoder for conic boxes
     sigma : float
         Gaussian noise sigma on voltages
 

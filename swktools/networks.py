@@ -89,7 +89,6 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
         DDtD = np.dot(DDtinv, D)
         x_ += beta*np.dot(DDtD,r)
     if alpha == 'Cone':
-        V_ =
         D_ = D[:2, :]
         w = D[2:3, :]
         z = x[-1, -1]

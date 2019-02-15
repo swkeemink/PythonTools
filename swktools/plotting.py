@@ -869,7 +869,7 @@ def spike_plot(o, times, base_offset, offset):
                               kdims='Time (a.u.)',
                               vdims='Neuron #')(style=style)
         else:
-            style = {'color':colors[i%len(colors)]}
+            style = {'color':'w']}
             out *= hv.Scatter(zip([0], [0]),
                           group='spikes',
                           kdims='Time (a.u.)',

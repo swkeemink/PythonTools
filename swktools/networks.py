@@ -5,7 +5,7 @@ In this script will be functions related to running networks.
 import numpy as np
 import warnings
 
-def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
+def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.
 
     Should have N neurons and M stimuli, with N >= M, and nT data points.
@@ -32,6 +32,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
         if 'Cone', apply general decoder for conic boxes
     sigma : float
         Gaussian noise sigma on voltages
+    record_currents : boolean
+        If true, record the negative and positive currents coming into each
+        neuron
 
     Returns
     -------
@@ -41,7 +44,13 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
         An array with 0's and 1's, for the spikes
     array (M by nT in size)
         An array of the decoded variables
+    array (N by nT by 3 (E then I then reset) in size)
+        If record_currents is True, return the currents coming into each neuron
+
     '''
+    if sigma>0 and record_currents:
+        warnings.warn('Currently record_currents does not support noise.')
+
     # get the derivative of x
     dx = np.diff(x, axis=1)/dt
 
@@ -52,19 +61,62 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
     # predefine arrays
 #     V = np.random.rand(N, nT)/10
     V = np.zeros((N, nT))
+    if record_currents:
+        I = np.zeros((N, nT, 3))
     o = np.zeros((N, nT))
     x_ = np.zeros((M, nT))
     r = np.zeros((N, nT))
     x_[:, 0] = x[:, 0]
     Omeg = np.dot(D.T, D) + np.identity(N)*beta
 
+    Omeg_e, Omeg_i = np.copy(Omeg), np.copy(Omeg)
+    Omeg_e[Omeg>0]=0
+    Omeg_i[Omeg<0]=0
+    Omeg_i[range(N), range(N)]=0
+    Omeg_R = np.zeros((N, N))
+    Omeg_R[range(N), range(N)] = np.diag(Omeg)
+
+    D_e, D_i = np.copy(D), np.copy(D)
+    D_e[D<0]=0
+    D_i[D>0]=0
+
     # find threshold
     T = np.diag(Omeg)/2
 
     # run neuron
     for i in range(1, nT):
+        # currents
+        if record_currents:
+            cur_input=dx[:, i-1]+x[:, i-1]/tau
+            cur_input_pos, cur_input_neg = np.copy(cur_input), np.copy(cur_input)
+            cur_input_pos[cur_input<0]=0
+            cur_input_neg[cur_input>0]=0
+
+            # inhibitory input current changes
+            dIi = np.dot(D_i.T, cur_input_pos)+np.dot(D_e.T, cur_input_neg)
+
+            # excitatory input current changes
+            dIe = np.dot(D_e.T, cur_input_pos)+np.dot(D_i.T, cur_input_neg)
+
+            # inhibitory recurrent current changes
+            dIe += -np.dot(Omeg_e, o[:, i-1]/dt)
+
+            # excitatory recurrent current changes
+            dIi += -np.dot(Omeg_i, o[:, i-1]/dt)
+
+            # self reset current
+            dIR = -np.dot(Omeg_R,  o[:, i-1]/dt)
+            # update currents
+            I[:, i, 0] = I[:, i-1, 0] + dt*(-I[:, i-1, 0]/tau + dIe)
+            I[:, i, 1] = I[:, i-1, 1] + dt*(-I[:, i-1, 1]/tau + dIi)
+            I[:, i, 2] = I[:, i-1, 2] + dt*(-I[:, i-1, 2]/tau + dIR)
+
+
         # dynamics
         dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau) - np.dot(Omeg, o[:, i-1]/dt)
+        # dV = -V[:, i-1]/tau + dIe + dIi
+
+        # V[:, i] = I[:, i, 0] + I[:, i, 1]
         V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
         r[:, i] = r[:, i-1] + dt*(-r[:, i-1]/tau + o[:, i-1]/dt)
 #         x_[:, i] = x_[:, i-1] + dt*(-x_[:, i-1]/tau + np.dot(D, o[:, i-1]/dt))
@@ -98,7 +150,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0):
     elif alpha is not None: x_[:-1, :] *= alpha(x, x_)
 
     # return
-    return V, o, x_
+    if record_currents:
+        return V, o, r, x_, I
+    return V, o, r, x_
 
 def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):
     ''' Runs a set of pike-coding networks (scn's)

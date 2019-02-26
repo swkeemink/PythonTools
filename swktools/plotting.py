@@ -446,7 +446,7 @@ def plot_frs_blocks(frs,norm, unit = ''):
 
     return out
 
-def plot_bounds_z(D, offset=(0,0,0), length=1, group='Curve'):
+def plot_bounds_z2(D, offset=(0,0,0), length=1, group='Curve'):
     ''' Plots the bounding box, for a given offset in z direction.
 
     For the offset in z it will be calculated what the net size of the bounding box is
@@ -601,8 +601,6 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
 
     # get thresholds for 2D box at height 0
     D2 = D[:2, :]
-    Omeg = np.dot(D2.T, D2) + np.identity(N)*beta
-    T = np.diag(Omeg)
 
     # plot projection vectors and bounding box
     angle = np.pi/2
@@ -622,11 +620,11 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
         projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
         v90 = np.dot(rotation, v)
         v90*= length*prop/np.linalg.norm(v90)
-        style = {'line_width':widths[i], 'linewidth':widths[i],
-                 'alpha':alphas[i], 'color':colors[i%len(colors)]}
+        # opts = hv.opts('line_width':widths[i], 'linewidth':widths[i],
+                 # 'alpha':alphas[i], 'color':colors[i%len(colors)]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
-                               group=group)(style=style)
+                               group=group)#(style=style)
     return bounds, projectVs
 
 def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
@@ -646,7 +644,8 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
         2D array of the actual stimulus
     o : array
         N by nT array of 0s and 1s indicating spikes
-    Tstart : int
+    Tstart : Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    T = np.diag(Omeg)/2int
         Starting timestep
     Tend : int
         Final timestep (if None, will use final timestep)
@@ -862,18 +861,16 @@ def spike_plot(o, times, base_offset, offset):
     for i in range(o.shape[0]):
         spiketimes = times[np.where(o[i, :]==1)[0]]
         if len(spiketimes)>0:
-            style = {'color':colors[i%len(colors)]}
+            opts = hv.opts.Scatter(color=colors[i%len(colors)])
             out *= hv.Scatter(
                 zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset),
-                              group='spikes',
-                              kdims='Time (a.u.)',
-                              vdims='Neuron #')(style=style)
+                              kdims='Time',
+                              vdims='Neuron', group='spikes').opts(opts)
         else:
-            style = {'color':'w'}
+            opts = hv.opts.Scatter(color='w')
             out *= hv.Scatter(zip([0], [0]),
-                          group='spikes',
-                          kdims='Time (a.u.)',
-                          vdims='Neuron #')(style=style)
+                          kdims='Time',
+                          vdims='Neuron', group='spikes')#.opts(opts)
     return out
 
 def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,

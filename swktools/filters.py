@@ -166,8 +166,10 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
 
     Parameters
     ----------
-    N : int
+    N : int or list o fints
         How many filters settings should be created
+        If the distribution is even, it should be a list as follows:
+        N = [Nxy, Nfreq, Nthet, Nsig, Noff]
     filter_type : string
         'DoG': Difference of Gaussians
         'Gabor' : Gabor filters (Not yet implemented)
@@ -219,12 +221,12 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
         if filter_type == 'DoG':
             raise NotImplementedError()
         elif filter_type == 'Gabor':
-            Nxy = np.ceil(np.sqrt(N))
-            xyoffsets = np.linspace(-l/2, l/2, Nxy)
-            frequencies = np.linspace(0.01, 0.999, Nxy)
-            thetas = np.linspace(0, 2*np.pi, Nxy)
-            sigmas = np.linspace(l/100., l/15., Nxy)
-            offsets = np.linspace(0, 1, np.ceil(np.sqrt(Nxy)))
+            Nxy, Nfreq, Nthet, Nsig, Noff = N
+            xyoffsets = np.linspace(-l/2, l/2, Nxy+2)[1:-1]
+            frequencies = np.linspace(0.3, 0.8, Nfreq)
+            thetas = np.linspace(0, 2*np.pi, Nthet)
+            sigmas = np.linspace(l/10., l/5., Nsig)
+            offsets = np.linspace(0, 1, Noff+1)[:-1]
             count = 0
             out = ['']*len(xyoffsets)**2*len(frequencies)*len(thetas)*len(sigmas)*len(offsets)
             for x in xyoffsets:

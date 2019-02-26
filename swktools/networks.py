@@ -42,6 +42,8 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
         An array with voltages
     array (N by nT in size)
         An array with 0's and 1's, for the spikes
+    array (n by nT in size)
+        Array with filtered firing rate traces
     array (M by nT in size)
         An array of the decoded variables
     array (N by nT by 3 (E then I then reset) in size)
@@ -114,32 +116,31 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
 
         # dynamics
         dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau) - np.dot(Omeg, o[:, i-1]/dt)
-        # dV = -V[:, i-1]/tau + dIe + dIi
-
-        # V[:, i] = I[:, i, 0] + I[:, i, 1]
         V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
         r[:, i] = r[:, i-1] + dt*(-r[:, i-1]/tau + o[:, i-1]/dt)
 #         x_[:, i] = x_[:, i-1] + dt*(-x_[:, i-1]/tau + np.dot(D, o[:, i-1]/dt))
 
         # find neurons that should spikes, if any
         to_spike = np.where(V[:, i] > T)[0]
-
-        if len(to_spike)>0:
-            # if more than one, pick only one to spike (and give a warning that dt is too big)
+        while len(to_spike)>0:
+            # while we are outside of the box, keep spiking
             to_pick = np.argmax(V[to_spike,i] - T[to_spike])
             neuron_id = to_spike[to_pick]
-            o[neuron_id, i] = 1
-
-        if len(to_spike)>1:
-            warnings.warn('More than one neuron wants to spike, consider lowering dt.')
+            o[neuron_id, i] += 1
+            dV = -np.dot(Omeg, o[:, i]/dt)
+            V[:, i] += dt*dV
+            to_spike = []#np.where(V[:, i] > T)[0]
+            # if len(to_spike)>0: print('bla')
+        # if len(to_spike)>1:
+        #     warnings.warn('More than one neuron wants to spike, consider lowering dt.')
 
     # get estimate
     x_ = np.dot(D, r)
 
-    if beta != 0:
-        DDtinv = np.linalg.inv(np.dot(D, D.T))
-        DDtD = np.dot(DDtinv, D)
-        x_ += beta*np.dot(DDtD,r)
+    # if beta != 0:
+    #     DDtinv = np.linalg.inv(np.dot(D, D.T))
+    #     DDtD = np.dot(DDtinv, D)
+    #     x_ += beta*np.dot(DDtD,r)
     if alpha == 'Cone':
         D_ = D[:2, :]
         w = D[2:3, :]
@@ -147,11 +148,13 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
         DDtinv = np.linalg.inv(np.dot(D_, D_.T))
         DDtD = np.dot(DDtinv, D_)
         x_[:2, :] = np.dot(D_, r)+np.dot(DDtD, np.dot(w.T, np.dot(w, r))) - np.dot(DDtD, np.dot(w.T, z))
-    elif alpha is not None: x_[:-1, :] *= alpha(x, x_)
+    elif alpha is not None:
+        x_[:-1, :] *= alpha(x, x_)
 
     # return
     if record_currents:
         return V, o, r, x_, I
+
     return V, o, r, x_
 
 def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):

@@ -550,11 +550,14 @@ def plot_bounds(D, beta=0, offset=(0,0), length=1, widths=None, alphas=None):
         projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]))
         v90 = np.dot(rotation, v)
         v90*= length/np.linalg.norm(v90)
-        style = {'line_width':widths[i], 'linewidth':widths[i],
-                 'alpha':alphas[i], 'color':colors[i%len(colors)]}
+        optsbokeh = hv.opts.Curve(backend='bokeh', line_width=widths[i],
+                       alpha=alphas[i], color=colors[i%len(colors)])
+        optsmat = hv.opts.Curve(linewidth=widths[i], backend='matplotlib',
+                      alpha=alphas[i], color=colors[i%len(colors)])
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
-                               kdims='x1 error', vdims='x2 error')(style=style)
+                               kdims='x1 error', vdims='x2 error').opts(
+                                        optsbokeh, optsmat)
 
     return bounds, projectVs
 
@@ -620,8 +623,8 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
         projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
         v90 = np.dot(rotation, v)
         v90*= length*prop/np.linalg.norm(v90)
-        # opts = hv.opts('line_width':widths[i], 'linewidth':widths[i],
-                 # 'alpha':alphas[i], 'color':colors[i%len(colors)]}
+        # opts = hv.opts.Curve('line_width':widths[i], 'linewidth':widths[i],
+        #          'alpha':alphas[i], 'color':colors[i%len(colors)]}
         bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
                                [y+v[1]+v90[1], y+v[1]-v90[1]]),
                                group=group)#(style=style)
@@ -689,15 +692,14 @@ def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
 
     # Define the animation frames
     frames = {f: hv.Scatter(zip([E[0, f]], [E[1, f]]),
-                            kdims='x1 error', vdims='x2 error')(
-                                                        style={'color':'k'})
+                            kdims='x1 error', vdims='x2 error').opts(color='k')
                  for f in framenums}
-    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T)(
-                                                        style={'color':'k'})
+    frames = {f: frames[f]*hv.Curve(E[:2, f+1-trail_length:f+1].T).opts(
+                                                                     color='k')
                  for f in framenums}
     frames = {f: frames[f]*hv.Scatter(
                             zip([x[0, f]], [x[1, f]])
-                                      )(style={'color':'w', 'marker':'x'})
+                                      ).opts(color='w', marker='x')
                  for f in framenums}
     frames = {f: frames[f]*plot_bounds(D, beta, (0, 0),
                                          length=boundlength,

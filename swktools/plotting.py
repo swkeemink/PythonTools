@@ -920,3 +920,189 @@ def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,
 
     # return animation
     return hv.HoloMap(frames)
+
+
+def GiveBoundLines(D, ref, lim):
+    """Gives the boundary lines for all neurons with weights D (assuming a 2d encoded variable)
+
+    Parameters
+    ----------
+    D : array
+        Standard SCN decoding matrix (for 2D signals)
+    ref : float
+        Which value the voltage should be at (usually the threshold)
+    limit : float
+        What limit to use for x- and y- axes
+
+    Returns
+    -------
+    array
+        N by 2 array with x-coordingates
+    list of arrays
+        N by 2 array with y-coordingates
+    """
+    N = D.shape[1]
+    Dzeros = D==0
+    D[Dzeros]=1e-20
+    xy = np.linspace(-lim, lim, 2)
+
+    # find naive coordinates (x to y coords)
+    Xs = np.array([xy for n in range(N)])
+    Ys = np.array([(ref-D[0, n]*xy)/D[1, n] for n in range(N)])
+
+    # for all of bounds (oob), find y to x coords instead
+    oob_x, oob_y = np.where(abs(Ys)>lim)
+    for i in range(len(oob_x)):
+        nx, ny = oob_x[i], oob_y[i]
+        y = np.sign(Ys[nx, ny])*lim
+        Xs[nx, ny] = (ref-D[1, nx]*y)/D[0, nx]
+        Ys[nx, ny] = y
+    D[Dzeros]=0
+    return Xs, Ys
+
+def findIntersection(Xs, Ys):
+    """Finds the intersection between two lines.
+    From https://stackoverflow.com/questions/20677795/how-do-i-compute-the-intersection-point-of-two-lines-in-python
+
+    Parameters
+    ----------
+    Xs, Ys : arrays
+        2 by 2 arrays, first dimension is neurons, second x and y axis
+
+    Returns
+    -------
+    np.array
+        the x and y coordinates of the intersection
+
+    """
+    x1,x2 = Xs[0, :]
+    x3,x4 = Xs[1, :]
+    y1,y2 = Ys[0, :]
+    y3,y4 = Ys[1, :]
+    px= ( (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
+    py= ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) ) / ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
+    return np.array([px, py])
+
+def findAllIntersects(D, ref, lim):
+    """Finds all intersections for point sets Xs and Ys.
+
+    Only returns the inner intersections.
+
+    Parameters
+    ----------
+    D : array
+        Standard SCN decoding matrix (for 2D signals)
+    ref : float
+        Which value the voltage should be at (usually the threshold)
+    lim : float
+        What limit to use for x- and y- axes
+
+    Output
+    ------
+    array
+        2 by n array, where n is the number of intersections. These are the cross-section coordinates.
+
+    array
+        n 2 by 2 array, where n is the number intersections. These are the line segments. These are sorted by neuron.
+    """
+    # get bounding lines
+    Xs, Ys = GiveBoundLines(D, ref, lim)
+
+    # get intersects
+    N = Xs.shape[0]
+    intersects = np.array([findIntersection(Xs[[n1, n2], :], Ys[[n1, n2], :]) for n1 in range(N) for n2 in range(n1+1,N)])
+
+    # throw away any that are past threshold, so can't be part of the bounding box
+    past_threshold=np.sum(np.dot(D.T, intersects.T) > ref+0.00000000000001, axis=0) # need to add a small value for floating point errors
+    intersects = intersects[past_threshold==0, :]
+
+    # order by orientation, and by neuron number
+    sort = np.argsort(np.arctan2(intersects[:, 0], intersects[:, 1]))
+    intersects = intersects[sort, :]
+
+    # find linesegments
+    intersects_lines = np.array([[intersects[n1%N, :], intersects[(n1+1)%N, :]] for n1 in range(-1,N-1)])
+
+    return intersects, intersects_lines
+
+def plot_bounding_curves(D, ref, lim):
+    """Plots a bounding box from a set of lines.
+
+    Parameters
+    ----------
+    D : array
+        Standard SCN decoding matrix (for 2D signals)
+    ref : float
+        Which value the voltage should be at (usually the threshold)
+    lim : float
+        What limit to use for x- and y- axes
+
+    Returns
+    -------
+    Holoviews Overlay
+        An overlay plot
+    """
+    # get intersect lines
+    intersects, intersect_lines = findAllIntersects(D, ref, lim)
+
+    N = intersect_lines.shape[0]
+    fig = hv.Overlay()
+    for n in range(N):
+        x = intersect_lines[n, :, 0]
+        y = intersect_lines[n, :, 1]
+        fig *= hv.Curve(zip(x, y))
+    return fig
+
+def plot_bounding_curves_z(intersect_lines, height):
+    """Plots a bounding box from a set of lines in 3D at particular height.
+
+    Parameters
+    ----------
+    intersect_lines : array
+        Array as returned by findAllIntersects()
+
+    Returns
+    -------
+    Holoviews Overlay
+        An overlay plot
+    """
+    N = intersect_lines.shape[0]
+    fig = hv.Overlay()
+    for n in range(N):
+        x = intersect_lines[n, :, 0]*abs(1-height)
+        y = intersect_lines[n, :, 1]*abs(1-height)
+        z = np.ones(len(x))*height
+        fig *= hv.Path3D((x, y, z)).opts(hv.opts.Path3D(line_width=3))
+    return fig
+
+def plot_cone_frame(D, ref, lim, depth, extents=None):
+    """Plots a 3D bounding-cone using HoloViews.
+
+    Parameters
+    ----------
+    D : array
+        Decoding weights, 3D
+    ref : float
+        Which value the voltage should be at (usually the threshold)
+    ref : float
+        What limit to use for x- and y- axes for determining bounding box
+    depth : float
+        Until what depth to plot the bounding cone
+    extents : tuple
+        Plotting extents (xmin, ymin, zmin, xmax, ymax, zmax)
+    """
+    # find intersection points
+    intersects, intersects_lines = findAllIntersects(D[:2, ], ref, lim)
+    N = D.shape[1]
+
+    # plot the contour lines
+    fig = hv.Overlay()
+    for n in range(N):
+        x = np.concatenate([[0], intersects_lines[n, :, 0]*(1+depth)])
+        y = np.concatenate([[0], intersects_lines[n, :, 1]*(1+depth)])
+        z = np.ones(len(x))*-depth
+        z[0] = ref
+
+        fig*=hv.Path3D((x, y, z), extents=extents).opts(color='gray')
+
+    return fig

@@ -118,7 +118,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
 
 
         # dynamics
-        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau) - np.dot(Omeg, o[:, i-1]/dt)
+        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau)-np.dot(Omeg, o[:, i-1]/dt)
         V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
         r[:, i] = r[:, i-1] + dt*(-r[:, i-1]/tau + o[:, i-1]/dt)
 #         x_[:, i] = x_[:, i-1] + dt*(-x_[:, i-1]/tau + np.dot(D, o[:, i-1]/dt))
@@ -130,12 +130,13 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
             to_pick = np.argmax(V[to_spike,i] - T[to_spike])
             neuron_id = to_spike[to_pick]
             o[neuron_id, i] += 1
-            dV = -np.dot(Omeg, o[:, i]/dt)
-            V[:, i] += dt*dV
+            # cur_spike = np.zeros(N)
+            # cur_spike[neuron_id] = 1
+            # dV = -np.dot(Omeg, cur_spike/dt)
+            # V[:, i] += dt*dV
             to_spike = []#np.where(V[:, i] > T)[0]
-            # if len(to_spike)>0: print('bla')
-        # if len(to_spike)>1:
-        #     warnings.warn('More than one neuron wants to spike, consider lowering dt.')
+            # dr = cur_spike/dt
+            # r[:, i] += dr*dt
 
     # get estimate
     x_ = np.dot(D, r)
@@ -145,6 +146,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     #     DDtD = np.dot(DDtinv, D)
     #     x_ += beta*np.dot(DDtD,r)
     if alpha == 'Cone':
+        # this is does not work and assumes all voltages are 0 on average
         D_ = D[:2, :]
         w = D[2:3, :]
         z = x[-1, -1]

@@ -5,7 +5,8 @@ In this script will be functions related to running networks.
 import numpy as np
 import warnings
 
-def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
+def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
+            T_scale = 1):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.
 
     Should have N neurons and M stimuli, with N >= M, and nT data points.
@@ -35,6 +36,8 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
     record_currents : boolean
         If true, record the negative and positive currents coming into each
         neuron
+    T_scale : float
+        How much to scale the threshold by compared to normal settings
 
     Returns
     -------
@@ -83,7 +86,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False):
     D_i[D>0]=0
 
     # find threshold
-    T = np.diag(Omeg)/2
+    T = T_scale*np.diag(Omeg)/2
 
     # run neuron
     for i in range(1, nT):

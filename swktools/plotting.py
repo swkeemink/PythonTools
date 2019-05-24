@@ -1106,3 +1106,32 @@ def plot_cone_frame(D, ref, lim, depth, extents=None):
         fig*=hv.Path3D((x, y, z), extents=extents).opts(color='gray')
 
     return fig
+
+def plot_stim_and_ests(x, x_, times, offset, Mplot):
+    """Plots the stimulus and the estimates on top of eachother with offsets.
+
+    Parameters
+    ----------
+    x, x_ : arrays
+        Input and outputs
+    times : array
+        Time points for x-axis
+    offset : float
+        The offset between each curve (per stimulus dimension)
+    Mplot : int
+        How many dimensions to plot
+
+    Outputs
+    -------
+    Holoviews Overlay
+        The curves plotted together
+    """
+    fig = hv.Overlay()
+    for m in range(Mplot):
+        fig *= hv.Curve(zip(times, x_[m, :]-m*offset), kdims='Time',
+                        group='readout')
+        fig *= hv.Curve(zip(times, x[m, :-1]-m*offset), kdims='Time',
+                        group='input').opts(
+                               hv.opts.Curve(color='k',line_dash='dashed'))
+
+    return fig

@@ -380,22 +380,24 @@ def show_connectivity(W):
     shiftN = (N-1)/2.
     shiftM = (M-1)/2.
     extents = (-.1, -.1*mx-shiftmx, 1.1, mx-1+.1*mx-shiftmx)
-    style = {'color':'k', 'size':100/mx}
+    opts = hv.opts.Scatter(color='k', size=100/mx)
     out = hv.Scatter(zip(np.zeros(N), np.arange(N)-shiftN),
-                     extents=extents)(style=style)
+                     extents=extents).opts(opts)
     out *= hv.Scatter(zip(np.ones(M), np.arange(M)-shiftM),
-                     extents=extents)(style=style)
+                     extents=extents).opts(opts)
 
     # add forward connections
     for i in range(N):
         for j in range(M):
             w = W[i, j]
-            style = {'color':'k', 'alpha':abs(w)/abs(W).max()}
+            alpha = abs(w)/abs(W).max()
             if w < 0:
-                style['color'] = 'b'
-            if w > 0:
-                style['color'] = 'r'
-            out *= hv.Curve(zip([0, 1], [i-shiftN, j-shiftM]))(style=style)
+                opts = hv.opts.Curve(color='b', alpha=alpha)
+            elif w > 0:
+                opts = hv.opts.Curve(color='r', alpha=alpha)
+            else:
+                opts = hv.opts.Curve(color='k', alpha=alpha)
+            out *= hv.Curve(zip([0, 1], [i-shiftN, j-shiftM])).opts(opts)
     return out
 
 def rectangle(x=0, y=0, width=1, height=1):

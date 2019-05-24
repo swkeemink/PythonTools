@@ -88,7 +88,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     # find threshold
     T = T_scale*np.diag(Omeg)/2
 
-    # run neuron
+    # run network
     for i in range(1, nT):
         # currents
         if record_currents:

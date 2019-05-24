@@ -273,3 +273,83 @@ def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):
 
     # return
     return Vs, os, x_s, z
+
+
+def run_layered_network(Ds, As, x_in, beta, taus, dt):
+    """Runs a layered network with transformations in each layer.
+
+    Parameters
+    ----------
+    Ds : list of arrays
+        Of form [D1, D2, D3,...], where each D is the decoding weights of a layer
+    As : list of arrays
+        Of form [A1, A2, A3,...], where each A is the inverse transofmration a layer does
+    x_in : array
+        Stimulus (of form (M, nT), which are stimulus dimensions and number of time points)
+        This is the original input stimulus
+    beta : float
+        Firing rate cost
+    taus : list of floats
+        Decoder timescales
+    dt : float
+        Simulation timescale
+
+    Returns
+    -------
+    list of arrays (N by nT in size)
+        Arrays with voltages
+    list of arrays (N by nT in size)
+        Arrays with 0's and 1's, for the spikes
+    list of arrays (n by nT in size)
+        Arrays with filtered firing rate traces
+    list of arrays (M by nT in size)
+        Arrays of the decoded variables
+    """
+    # get the derivative of x
+    dx_in = np.diff(x_in, axis=1)/dt
+
+    # get number of layers
+    nLayers = len(Ds)
+
+    # get array sizes
+    nT = x_in.shape[1] # number of timesteps
+    Ms = [Ds[l].shape[0] for l in range(nLayers)]  # number of dimensions for each layer
+    Ns = [Ds[l].shape[1] for l in range(nLayers)] # number of neurons for each layer
+
+    # predefine arrays
+    Vs = [np.zeros((Ns[l], nT)) for l in range(nLayers)]
+    os = [np.zeros((Ns[l], nT)) for l in range(nLayers)]
+    x_s = [np.zeros((Ms[l], nT)) for l in range(nLayers)]
+    x_s[0][:, 0] = x_in[:, 0]
+    rs = [np.zeros((Ns[l], nT)) for l in range(nLayers)]
+    Omegs = [Ds[l].T.dot(As[l]).dot(Ds[l]) + np.identity(Ns[l])*beta for l in range(nLayers)]
+
+    # find thresholds
+    Ts = [np.diag(Omegs[l])/2 for l in range(nLayers)]
+
+    # run network
+    for i in range(1, nT):
+        # update each layer in time
+        for l in range(nLayers):
+            # update voltage
+            dV = -Vs[l][:, i-1]/taus[l]
+            if l==0:
+                dV += np.dot(Ds[l].T, dx_in[:, i-1]+x_in[:, i-1]/taus[l])
+            else: # here I use the fact that Dr/tau+Ddx = o/dt  (o = spikes)
+                dV += np.dot(Ds[l].T, Ds[l-1].dot(os[l-1][:, i-1]/dt))
+            dV += -np.dot(Omegs[l], os[l][:, i-1]/dt)
+            Vs[l][:, i] = Vs[l][:, i-1] + dt*dV
+            rs[l][:, i] = rs[l][:, i-1] + dt*(-rs[l][:, i-1]/taus[l] + os[l][:, i-1]/dt)
+
+            # should spike happen (one spike per layer)
+            to_spike = np.where(Vs[l][:, i] > Ts[l])[0]
+            while len(to_spike)>0:
+                to_pick = np.argmax(Vs[l][to_spike,i] - Ts[l][to_spike])
+                neuron_id = to_spike[to_pick]
+                os[l][neuron_id, i] += 1
+                to_spike = []
+
+            # update read-out
+            x_s[l][:, i] = Ds[l].dot(rs[l][:, i])
+
+    return Vs, os, rs, x_s

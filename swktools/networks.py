@@ -275,7 +275,7 @@ def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):
     return Vs, os, x_s, z
 
 
-def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None):
+def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None, output_normalize=False):
     """Runs a layered network with transformations in each layer.
 
     Parameters
@@ -295,6 +295,10 @@ def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None):
         Simulation timescale
     T_scales : array
         How much to scale the threshold by compared to optimal in each layer
+    output_normalize : bool
+        If True, will normalize the output of each layer by the estimate of
+        z, i.e. the sum of all firing rates. (only works if simulating a
+        cone system).
 
     Returns
     -------
@@ -339,8 +343,14 @@ def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None):
             dV = -Vs[l][:, i-1]/taus[l]
             if l==0:
                 dV += np.dot(Ds[l].T, dx_in[:, i-1]+x_in[:, i-1]/taus[l])
-            else: # here I use the fact that Dr/tau+Ddx = o/dt  (o = spikes)
-                dV += np.dot(Ds[l].T, Ds[l-1].dot(os[l-1][:, i-1]/dt))
+            else: # here I use the fact that Dr/tau+Ddr/dt = o/dt  (o = spikes)
+                if output_normalize:
+                    input = Ds[l-1].dot(os[l-1][:, i-1]/dt)
+                    if abs(x_s[l][-1, i-1])>0:
+                        input /= x_s[l][-1, i-1]
+                    dV += np.dot(Ds[l].T, input)
+                else:
+                    dV += np.dot(Ds[l].T, Ds[l-1].dot(os[l-1][:, i-1]/dt))
             dV += -np.dot(Omegs[l], os[l][:, i-1]/dt)
             Vs[l][:, i] = Vs[l][:, i-1] + dt*dV
             rs[l][:, i] = rs[l][:, i-1] + dt*(-rs[l][:, i-1]/taus[l] + os[l][:, i-1]/dt)
@@ -355,5 +365,8 @@ def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None):
 
             # update read-out
             x_s[l][:, i] = Ds[l].dot(rs[l][:, i])
+            if output_normalize: # normalizes by last signal dimension
+                if abs(x_s[l][-1, i])>0:
+                    x_s[l][:, i] /= x_s[l][-1, i]
 
     return Vs, os, rs, x_s

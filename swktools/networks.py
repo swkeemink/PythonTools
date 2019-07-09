@@ -275,7 +275,7 @@ def run_scn_set(xs, Ds, beta, tau, dt, sigma=0):
     return Vs, os, x_s, z
 
 
-def run_layered_network(Ds, As, x_in, beta, taus, dt):
+def run_layered_network(Ds, As, x_in, beta, taus, dt, T_scales=None):
     """Runs a layered network with transformations in each layer.
 
     Parameters
@@ -293,6 +293,8 @@ def run_layered_network(Ds, As, x_in, beta, taus, dt):
         Decoder timescales
     dt : float
         Simulation timescale
+    T_scales : array
+        How much to scale the threshold by compared to optimal in each layer
 
     Returns
     -------
@@ -325,7 +327,9 @@ def run_layered_network(Ds, As, x_in, beta, taus, dt):
     Omegs = [Ds[l].T.dot(As[l]).dot(Ds[l]) + np.identity(Ns[l])*beta for l in range(nLayers)]
 
     # find thresholds
-    Ts = [np.diag(Omegs[l])/2 for l in range(nLayers)]
+    if T_scales is None:
+        T_scales = np.ones(nLayers)
+    Ts = [T_scales[l]*np.diag(Omegs[l])/2 for l in range(nLayers)]
 
     # run network
     for i in range(1, nT):

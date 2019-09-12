@@ -36,8 +36,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     record_currents : boolean
         If true, record the negative and positive currents coming into each
         neuron
-    T_scale : float
+    T_scale : float or array
         How much to scale the threshold by compared to normal settings
+        If array, should be same as number of neurons, to scale each threshold differently.
 
     Returns
     -------

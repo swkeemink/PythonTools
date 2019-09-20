@@ -947,7 +947,7 @@ def GiveBoundLines(D, ref, lim):
     Dzeros = D==0
     D[Dzeros]=1e-20
     xy = np.linspace(-lim, lim, 2)
-
+    
     # find naive coordinates (x to y coords)
     Xs = np.array([xy for n in range(N)])
     Ys = np.array([(ref-D[0, n]*xy)/D[1, n] for n in range(N)])

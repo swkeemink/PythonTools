@@ -1027,7 +1027,7 @@ def findAllIntersects(D, ref, lim):
 
     return intersects, intersects_lines
 
-def plot_bounding_curves(D, ref, lim):
+def plot_bounding_curves(D, ref, lim, offsets=None, linewidths=None):
     """Plots a bounding box from a set of lines.
 
     Parameters
@@ -1038,21 +1038,34 @@ def plot_bounding_curves(D, ref, lim):
         Which value the voltage should be at (usually the threshold)
     lim : float
         What limit to use for x- and y- axes
+    offsets : array
+        [x, y] offsets
+    linewidths : array
+        Linewidths for each neural bound
 
     Returns
     -------
     Holoviews Overlay
         An overlay plot
     """
+    # give default offsets
+    if offsets is None:
+        offsets = [0, 0]
+    
+    if linewidths is None:
+        opts = [hv.opts.Curve()]*D.shape[1]
+    else:
+        opts = [hv.opts.Curve(linewidth=linewidths[n]) for n in range(D.shape[1])]
+
     # get intersect lines
     intersects, intersect_lines = findAllIntersects(D, ref, lim)
 
     N = intersect_lines.shape[0]
     fig = hv.Overlay()
     for n in range(N):
-        x = intersect_lines[n, :, 0]
-        y = intersect_lines[n, :, 1]
-        fig *= hv.Curve(zip(x, y))
+        x = intersect_lines[n, :, 0]+offsets[0]
+        y = intersect_lines[n, :, 1]+offsets[1]
+        fig *= hv.Curve(zip(x, y), extents=(-lim, -lim, lim, lim)).opts(opts[n])
     return fig
 
 def plot_bounding_curves_z(intersect_lines, height):

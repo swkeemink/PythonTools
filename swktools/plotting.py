@@ -952,7 +952,7 @@ def GiveBoundLines(D, ref, lim):
     Xs = np.array([xy for n in range(N)])
     Ys = np.array([(ref-D[0, n]*xy)/D[1, n] for n in range(N)])
 
-    # for all of bounds (oob), find y to x coords instead
+    # for all out of bounds (oob), find y to x coords instead
     oob_x, oob_y = np.where(abs(Ys)>lim)
     for i in range(len(oob_x)):
         nx, ny = oob_x[i], oob_y[i]

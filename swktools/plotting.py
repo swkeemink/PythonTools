@@ -871,10 +871,10 @@ def spike_plot(o, times, base_offset, offset):
                               kdims='Time',
                               vdims='Neuron', group='spikes').opts(opts)
         else:
-            opts = hv.opts.Scatter(color='w')
-            out *= hv.Scatter(zip([0], [0]),
+            opts = hv.opts.Scatter(color='w', alpha=0)
+            out *= hv.Scatter([],
                           kdims='Time',
-                          vdims='Neuron', group='spikes')#.opts(opts)
+                          vdims='Neuron', group='spikes').opts(opts)
     return out
 
 def spike_anim(o, times, base_offset, offset, Tstart=0, Tend=None,

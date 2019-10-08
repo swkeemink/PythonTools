@@ -135,6 +135,9 @@ def gabor_kernel(frequency, imsize=10, theta=0, sigma=1, offset=0, xoffset=0,
     g /= 2 * np.pi * sigma**2
     g *= np.cos(2 * np.pi * frequency * rotx + offset)
 
+    # normalize filter
+    g /= g.sum()
+
     return g
 
 def CreateFilterBank(filtfunc, settings_list, l):

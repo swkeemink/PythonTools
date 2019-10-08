@@ -89,7 +89,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     D_i[D>0]=0
 
     # find threshold
-    T = T_scale*np.diag(Omeg)/2
+    T = (T_scale*np.diag(Omeg)+beta)/2
 
     # run network
     for i in range(1, nT):
@@ -114,6 +114,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
 
             # self reset current
             dIR = -np.dot(Omeg_R,  o[:, i-1]/dt)
+
             # update currents
             I[:, i, 0] = I[:, i-1, 0] + dt*(-I[:, i-1, 0]/tau + dIe)
             I[:, i, 1] = I[:, i-1, 1] + dt*(-I[:, i-1, 1]/tau + dIi)

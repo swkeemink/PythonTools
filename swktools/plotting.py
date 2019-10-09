@@ -9,6 +9,24 @@ import matplotlib.pyplot as plt
 colors = hv.core.options.Cycle.default_cycles['default_colors']
 Ncolors = len(colors)
 
+def plot_vector(x, lim=1):
+    """Plot the vector x.
+
+    Parameters
+    ----------
+    x : list or array
+        2D array with x and y coordinate
+    lim : float
+        Plotting limit
+    """
+    xs = [0, x[0]]
+    ys = [0, x[1]]
+
+    path = hv.Curve(zip(xs, ys), extents=(-lim, -lim, lim, lim))
+    point = hv.Scatter(zip(xs[1:], ys[1:]))
+
+    return path*point
+
 
 def plot3d(traj, ntraj=1, labels=['x', 'y', 'z'], ax=None):
     """Plot the 3d trajectory in traj in 4D.

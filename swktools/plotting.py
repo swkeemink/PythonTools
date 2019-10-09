@@ -29,7 +29,7 @@ def plot_vector(x, lim=1):
 
 
 def plot3d(traj, ntraj=1, labels=['x', 'y', 'z'], ax=None):
-    """Plot the 3d trajectory in traj in 4D.
+    """Plot the 3d trajectory in traj in 3D.
 
     Parameters
     ----------

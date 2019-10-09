@@ -1142,6 +1142,21 @@ def plot_cone_frame(D, ref, lim, depth, extents=None):
 
     return fig
 
+def plot_spike_3D(o, E, D, ref, lim):
+    N = D.shape[1]
+    intersects, intersect_lines = findAllIntersects(D[:2, :], ref, lim)
+    zs = E[-1, :]
+    spike_ids, spike_times = np.where(o)
+    fig = hv.Overlay()
+    for i, time in enumerate(spike_times):
+        n = spike_ids[i]
+        x = intersect_lines[(n)%N, :, 0]*abs(1-zs[time])
+        y = intersect_lines[(n)%N, :, 1]*abs(1-zs[time])
+        z = np.ones(len(x))*zs[time]
+        fig *= hv.Path3D((x, y, z)).opts(hv.opts.Path3D(line_width=3, color=colors[n%Ncolors]))
+    return fig
+
+
 def plot_stim_and_ests(x, x_, times, offset, Mplot):
     """Plots the stimulus and the estimates on top of eachother with offsets.
 

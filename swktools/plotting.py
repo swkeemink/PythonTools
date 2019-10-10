@@ -27,7 +27,26 @@ def plot_vector(x, lim=1):
 
     return path*point
 
+def plot_vector_3D(x, lim=1, color='black'):
+    """Plot the 3D vector x.
 
+    Parameters
+    ----------
+    x : list or array
+        2D array with x and y coordinate
+    lim : float
+        Plotting limit
+    color : whatever plotting tool accepts
+        Color of the vector
+    """
+    xs = [0, x[0]]
+    ys = [0, x[1]]
+    zs = [0, x[2]]
+    
+    path = hv.Path3D(zip(xs, ys, zs), extents=(-lim, -lim, -lim, lim, lim, lim)).opts(color=color)
+    point = hv.Scatter3D(zip(xs[1:], ys[1:], zs[1:])).opts(size=3, color=color)
+    return path*point
+    
 def plot3d(traj, ntraj=1, labels=['x', 'y', 'z'], ax=None):
     """Plot the 3d trajectory in traj in 3D.
 

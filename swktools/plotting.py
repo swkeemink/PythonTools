@@ -1125,6 +1125,11 @@ def plot_cone_frame(D, ref, lim, depth, extents=None):
         Until what depth to plot the bounding cone
     extents : tuple
         Plotting extents (xmin, ymin, zmin, xmax, ymax, zmax)
+
+    Returns
+    -------
+    Holoviews Overlay
+        3D plotting object, only works in matplotlib or plotly
     """
     # find intersection points
     intersects, intersects_lines = findAllIntersects(D[:2, ], ref, lim)

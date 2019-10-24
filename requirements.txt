@@ -1,3 +1,4 @@
 holoviews
 numpy
-sklearn
+scikit-learn
+scikit-image

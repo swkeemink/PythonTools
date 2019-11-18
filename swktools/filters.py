@@ -132,11 +132,11 @@ def gabor_kernel(frequency, imsize=10, theta=0, sigma=1, offset=0, xoffset=0,
 
     # calculate filter
     g = np.exp(-0.5 * (rotx ** 2 / sigma ** 2 + roty ** 2 / sigma ** 2))
-    g /= 2 * np.pi * sigma**2
+    # g /= 2 * np.pi * sigma**2
     g *= np.cos(2 * np.pi * frequency * rotx + offset)
 
     # normalize filter
-    g /= g.sum()
+    # g /= g.sum()
 
     return g
 

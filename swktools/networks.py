@@ -6,7 +6,7 @@ import numpy as np
 import warnings
 
 def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
-            T_scale = 1, V_min = None):
+            T_scale = 1, V_min = None, delay=0):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.
 
     Should have N neurons and M stimuli, with N >= M, and nT data points.
@@ -41,6 +41,8 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
         If array, should be same as number of neurons, to scale each threshold differently.
     V_min : float
         If given, puts a lower bound on the voltages
+    delay : int
+        The delay (in number of timesteps) in the recurrent connectivity
 
     Returns
     -------
@@ -76,6 +78,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     r = np.zeros((N, nT))
     x_[:, 0] = x[:, 0]
     Omeg = np.dot(D.T, D) + np.identity(N)*beta
+    noise = np.round(np.random.randn(Omeg.shape[0], Omeg.shape[1])*0)
+    Omeg += noise
+    # print(abs(noise).sum())
 
     Omeg_e, Omeg_i = np.copy(Omeg), np.copy(Omeg)
     Omeg_e[Omeg>0]=0
@@ -122,7 +127,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
 
 
         # dynamics
-        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau)-np.dot(Omeg, o[:, i-1]/dt)
+        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau)-np.dot(Omeg_R, o[:, i-1]/dt)
+        if i > delay:
+            dV += -np.dot(Omeg-Omeg_R, o[:, i-1-delay]/dt)
         V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
         if V_min is not None:
             V[V[:, i]<V_min, i] = V_min

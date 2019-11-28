@@ -907,12 +907,12 @@ def spike_plot(o, times, base_offset, offset):
             opts = hv.opts.Scatter(color=colors[i%len(colors)])
             out *= hv.Scatter(
                 zip(spiketimes, np.ones(len(spiketimes))*offset*i+base_offset),
-                              kdims='Time',
+                              kdims='Time (s)',
                               vdims='Neuron', group='spikes').opts(opts)
         else:
             opts = hv.opts.Scatter(color='w', alpha=0)
             out *= hv.Scatter([],
-                          kdims='Time',
+                          kdims='Time (s)',
                           vdims='Neuron', group='spikes').opts(opts)
     return out
 

@@ -42,11 +42,11 @@ def plot_vector_3D(x, lim=1, color='black'):
     xs = [0, x[0]]
     ys = [0, x[1]]
     zs = [0, x[2]]
-    
+
     path = hv.Path3D(zip(xs, ys, zs), extents=(-lim, -lim, -lim, lim, lim, lim)).opts(color=color)
     point = hv.Scatter3D(zip(xs[1:], ys[1:], zs[1:])).opts(size=3, color=color)
     return path*point
-    
+
 def plot3d(traj, ntraj=1, labels=['x', 'y', 'z'], ax=None):
     """Plot the 3d trajectory in traj in 3D.
 
@@ -978,15 +978,15 @@ def GiveBoundLines(D, ref, lim):
     Returns
     -------
     array
-        N by 2 array with x-coordingates
+        N by 2 array with x-coordinates
     list of arrays
-        N by 2 array with y-coordingates
+        N by 2 array with y-coordinates
     """
     N = D.shape[1]
     Dzeros = D==0
     D[Dzeros]=1e-20
     xy = np.linspace(-lim, lim, 2)
-    
+
     # find naive coordinates (x to y coords)
     Xs = np.array([xy for n in range(N)])
     Ys = np.array([(ref-D[0, n]*xy)/D[1, n] for n in range(N)])
@@ -1090,7 +1090,7 @@ def plot_bounding_curves(D, ref, lim, offsets=None, linewidths=None):
     # give default offsets
     if offsets is None:
         offsets = [0, 0]
-    
+
     if linewidths is None:
         opts = [hv.opts.Curve()]*D.shape[1]
     else:

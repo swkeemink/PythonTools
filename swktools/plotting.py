@@ -979,7 +979,7 @@ def GiveBoundLines(D, ref, lim):
     -------
     array
         N by 2 array with x-coordinates
-    list of arrays
+    array
         N by 2 array with y-coordinates
     """
     N = D.shape[1]

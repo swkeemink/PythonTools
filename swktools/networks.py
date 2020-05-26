@@ -78,8 +78,8 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     r = np.zeros((N, nT))
     x_[:, 0] = x[:, 0]
     Omeg = np.dot(D.T, D) + np.identity(N)*beta
-    noise = np.round(np.random.randn(Omeg.shape[0], Omeg.shape[1])*0)
-    Omeg += noise
+    # noise = np.round(np.random.randn(Omeg.shape[0], Omeg.shape[1])*0)
+    # Omeg += noise
     # print(abs(noise).sum())
 
     Omeg_e, Omeg_i = np.copy(Omeg), np.copy(Omeg)

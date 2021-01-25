@@ -872,7 +872,7 @@ def animate_signal_tracking(x, x_, times, Tstart=0, Tend=None, step_size=10):
     # return animation
     return hv.HoloMap(frames)
 
-def spike_plot(o, times, base_offset, offset):
+def spike_plot(o, times, base_offset, offset, colors=colors):
     """Plots a set of neurons' spikes, given a 2d array of 0's and 1's.
 
     Parameters
@@ -886,13 +886,8 @@ def spike_plot(o, times, base_offset, offset):
         y-axis offset of all spikes
     offset : float
         y-axis offset between each row of spikes
-    Tstart : int
-        Starting timestep
-    Tend : int
-        Final timestep (if None, will use final timestep)
-    step_size : int
-        How many timesteps to skip for each frame
-        y-axis offset between each row of spikes
+    colors : list of strings
+        Color list to cycle through when plotting the neurons
 
     Returns
     -------

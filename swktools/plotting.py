@@ -1187,7 +1187,7 @@ def plot_spike_3D(o, E, D, ref, lim, color=None):
     return fig
 
 
-def plot_stim_and_ests(x, x_, times, offset, Mplot):
+def plot_stim_and_ests(x, x_, times, offset, Mplot, colors=None, backend='bokeh'):
     """Plots the stimulus and the estimates on top of eachother with offsets.
 
     Parameters
@@ -1200,18 +1200,33 @@ def plot_stim_and_ests(x, x_, times, offset, Mplot):
         The offset between each curve (per stimulus dimension)
     Mplot : int
         How many dimensions to plot
-
+    colors : list of color strings or codes
+        Optionally give a list of colors instead of the default colors
+        
     Outputs
     -------
     Holoviews Overlay
         The curves plotted together
     """
+    if colors is None:
+        colors = hv.core.options.Cycle.default_cycles['default_colors']
+    ncolors = len(colors)
     fig = hv.Overlay()
     for m in range(Mplot):
-        fig *= hv.Curve(zip(times, x_[m, :]-m*offset), kdims='Time',
-                        group='readout')
-        fig *= hv.Curve(zip(times, x[m, :-1]-m*offset), kdims='Time',
-                        group='input').opts(
-                               hv.opts.Curve(color='k',line_dash='dashed'))
+        if backend=='bokeh':
+            fig *= hv.Curve(zip(times, x_[m, :]-m*offset), kdims='Time',
+                            group='readout').opts(color=colors[m%ncolors])
+            fig *= hv.Curve(zip(times, x[m, :-1]-m*offset), kdims='Time',
+                            group='input').opts(
+                                   hv.opts.Curve(color='k',line_dash='dashed'))
+        elif backend=='matplotlib':
+
+            fig *= hv.Curve(zip(times, x_[m, :]-m*offset), kdims='Time',
+                            group='readout').opts(color=colors[m%ncolors])
+            fig *= hv.Curve(zip(times, x[m, :-1]-m*offset), kdims='Time',
+                            group='input').opts(
+                                   hv.opts.Curve(color='k',linestyle='--'))
+        else:
+            raise NotImplementedError('No other backend explicitly implemented. Plotly might work with either though.')
 
     return fig

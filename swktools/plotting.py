@@ -1161,7 +1161,18 @@ def plot_cone_frame(D, ref, lim, depth, extents=None):
 
     return fig
 
-def plot_spike_3D(o, E, D, ref, lim):
+def plot_spike_3D(o, E, D, ref, lim, color=None):
+    """ Plots a spike on 3D structure.
+    
+    Inputs
+    ------
+    o, E, D, ref, lim : TODO
+    	TODO
+    color : list
+    	List of colors to use"""
+    if color is None:
+    	color = colors
+    Ncolors = len(color)
     N = D.shape[1]
     intersects, intersect_lines = findAllIntersects(D[:2, :], ref, lim)
     zs = E[-1, :]
@@ -1172,7 +1183,7 @@ def plot_spike_3D(o, E, D, ref, lim):
         x = intersect_lines[(n)%N, :, 0]*abs(1-zs[time])
         y = intersect_lines[(n)%N, :, 1]*abs(1-zs[time])
         z = np.ones(len(x))*zs[time]
-        fig *= hv.Path3D((x, y, z)).opts(hv.opts.Path3D(line_width=3, color=colors[n%Ncolors]))
+        fig *= hv.Path3D((x, y, z)).opts(hv.opts.Path3D(line_width=3, color=color[n%Ncolors]))
     return fig
 
 

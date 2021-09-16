@@ -6,7 +6,7 @@ import numpy as np
 import warnings
 
 def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
-            T_scale = 1, V_min = None, delay=0):
+            T_scale = 1, V_min = None, delay=0, bg=None):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.
 
     Should have N neurons and M stimuli, with N >= M, and nT data points.
@@ -43,6 +43,9 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
         If given, puts a lower bound on the voltages
     delay : int
         The delay (in number of timesteps) in the recurrent connectivity
+    bg : 2D array
+        Background input (is input into the neurons as bg + dbg/dt as other inputs).
+        Should be N by nT in size (one input for each neuron).
 
     Returns
     -------
@@ -67,6 +70,13 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
     # get array sizes
     nT = dx.shape[1]
     M, N = D.shape
+
+    # define background current
+    if bg is None:
+        bg = np.zeros((N, nT))
+        dbg = np.zeros((N, nT))
+    else:
+        dbg = np.diff(bg, axis=1)/dt
 
     # predefine arrays
 #     V = np.random.rand(N, nT)/10
@@ -127,7 +137,7 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
 
 
         # dynamics
-        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau)-np.dot(Omeg_R, o[:, i-1]/dt)
+        dV = -V[:, i-1]/tau + np.dot(D.T, dx[:, i-1]+x[:, i-1]/tau)-np.dot(Omeg_R, o[:, i-1]/dt) + bg[:, i-1] + dbg[:, -1]/tau
         if i > delay:
             dV += -np.dot(Omeg-Omeg_R, o[:, i-1-delay]/dt)
         V[:, i] = V[:, i-1] + dt*dV + np.sqrt(dt)*sigma*np.random.randn(N)
@@ -139,18 +149,21 @@ def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
         # find neurons that should spikes, if any
         to_spike = np.where(V[:, i] > T)[0]
         while len(to_spike)>0:
-            # while we are outside of the box, keep spiking
-            to_pick = np.argmax(V[to_spike,i] - T[to_spike])
-            neuron_id = to_spike[to_pick]
-            o[neuron_id, i] += 1
-            # cur_spike = np.zeros(N)
-            # cur_spike[neuron_id] = 1
-            # dV = -np.dot(Omeg, cur_spike/dt)
-            # V[:, i] += dt*dV
-            to_spike = []#np.where(V[:, i] > T)[0]
-            # dr = cur_spike/dt
-            # r[:, i] += dr*dt
-
+            if delay==0:
+                # while we are outside of the box, keep spiking
+                to_pick = np.argmax(V[to_spike,i] - T[to_spike])
+                neuron_id = to_spike[to_pick]
+                o[neuron_id, i] += 1
+                # cur_spike = np.zeros(N)
+                # cur_spike[neuron_id] = 1
+                # dV = -np.dot(Omeg, cur_spike/dt)
+                # V[:, i] += dt*dV
+                to_spike = []#np.where(V[:, i] > T)[0]
+                # dr = cur_spike/dt
+                # r[:, i] += dr*dt
+            else:
+                o[to_spike, i] += 1
+                to_spike = []
     # get estimate
     x_ = np.dot(D, r)
 

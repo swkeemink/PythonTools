@@ -205,7 +205,7 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
                 out[i] = settings
         elif filter_type == 'Gabor':
             frequencies = 5/l
-            thetas = np.random.rand(N)*2*np.pi
+            thetas = np.random.rand(N)*np.pi
             sigma = np.random.rand(N)*10+1
             offset = np.random.rand(N)
             xyoffsets = (np.random.rand(N, 2)-0.5)*l
@@ -227,7 +227,7 @@ def CreateSettingsList(N, filter_type, l, distribution='Random'):
             Nxy, Nfreq, Nthet, Nsig, Noff = N
             xyoffsets = np.linspace(-l/2, l/2, Nxy+2)[1:-1]
             frequencies = np.linspace(3, 8, Nfreq)/l
-            thetas = np.linspace(0, 2*np.pi, Nthet)
+            thetas = np.linspace(0, np.pi, Nthet)
             sigmas = np.linspace(l/5., l/10., Nsig)
             offsets = np.linspace(0, 1, Noff+1)[:-1]
             count = 0

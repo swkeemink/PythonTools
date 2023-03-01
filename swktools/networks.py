@@ -5,6 +5,27 @@ In this script will be functions related to running networks.
 import numpy as np
 import warnings
 
+def calc_fr(s, n = 1000):
+    ''' Calculates the firing rate of a spiking block.
+    
+    Parameters
+    ----------
+    s : array
+        Variable of 0s and 1s (spikes). Should be N by nT in size.
+    n : int
+        Length in timesteps of averaging block
+
+    Returns
+    -------
+    array (of length nT)
+        The spike averages at each step
+    
+    '''
+    count = s.sum(axis=0)
+    kernel = np.ones(n)/n
+    fr = np.convolve(count, kernel, 'same')
+    return fr
+
 def run_scn(x, D, beta, tau, dt, alpha=None, sigma=0, record_currents=False,
             T_scale = 1, V_min = None, delay=0, bg=None):
     ''' Runs a simple spike-coding network (scn), given stimulus x, decoding weights D, sparsity Beta, and decoder timescale tau.

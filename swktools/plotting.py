@@ -671,6 +671,75 @@ def plot_bounds_z(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
                                group=group)#(style=style)
     return bounds, projectVs
 
+def plot_bounds_new(D,  T, beta=0, offset=(0,0,0), length=1, group='Curve',
+                  widths=None, alphas=None):
+    ''' Plots the bounding box, for a given offset in z directionself.
+
+    This function is specifically for bounding boxes which are cone-shaped.
+
+    For the offset in z it will be calculated what the net size of the
+    bounding box is.
+
+    Parameters
+    ----------
+    D : array
+        Decoding weights, 3D
+    T : array
+        array of spiking thresholds
+    beta : float
+        network cost parameter
+    offset : list/tuple/array
+        [x,y,z] offset of the bounding box
+    length : float
+        length of the bounding box vertices
+    widths : array
+        Array of linewidths for each vertice
+    alphas : array
+        Array of alphas for each vertice
+
+    Returns
+    -------
+    HoloViews overlay
+        The boundary box, offset by 'offset'
+    HoloViews overlay
+        The vectors determining the boundary box, offset by ''offset'
+    '''
+    # infer some parameters
+    N = D.shape[1]
+    if widths is None: widths = np.ones(N)*2
+    if alphas is None: widths = np.ones(N)
+
+    # get offsets
+    x, y, z = offset
+
+    # get thresholds for 2D box at height 0
+    D2 = D[:2, :]
+
+    # plot projection vectors and bounding box
+    angle = np.pi/2
+    rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+    projectVs = hv.Overlay()
+    bounds = hv.Overlay()
+    for i in range(N):
+
+        v = np.copy(D2[:, i])
+        norm = np.linalg.norm(v)
+        v/= norm
+        scale = T[i]/norm**1-z
+        if scale<0: scale=0
+        prop = scale*norm**1/T[i]
+        v*= scale
+        projectVs *= hv.Curve(zip([x, x+v[0]], [y, y+v[1]]), group=group)
+        v90 = np.dot(rotation, v)
+        v90*= length*prop/np.linalg.norm(v90)
+        # opts = hv.opts.Curve('line_width':widths[i], 'linewidth':widths[i],
+        #          'alpha':alphas[i], 'color':colors[i%len(colors)]}
+        bounds *= hv.Curve(zip([x+v[0]+v90[0], x+v[0]-v90[0]],
+                               [y+v[1]+v90[1], y+v[1]-v90[1]]),
+                               group=group)#(style=style)
+    return bounds, projectVs
+
 def animate_error_box_2D(D, beta, E, x, o, Tstart=0, Tend=None,
                       boundlength=0.5, trail_length=40, step_size=10,
                       spike_tau=.3, dt=0.01):
